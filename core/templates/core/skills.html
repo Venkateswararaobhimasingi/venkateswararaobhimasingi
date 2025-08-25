@@ -1,0 +1,842 @@
+{% extends "core/newhome.html" %}
+{% block content %}
+<style>
+  /* CSS Variables for theme switching */
+  :root {
+    --resume-bg: #f6f7fb;
+    --resume-text-color: #000000;
+    --resume-card-bg: rgba(255, 255, 255, 0.5);
+    --resume-card-shadow: rgba(0,0,0,.08);
+    --resume-button-bg: #2563eb;
+    --resume-button-color: white;
+    --resume-button-hover-bg: #1d4ed8;
+    --resume-section-bg: rgba(255, 255, 255, 0.3);
+    --resume-controls-bg: rgba(243, 244, 246, 0.5);
+    --resume-controls-text: #000000;
+    --resume-border: rgba(255, 255, 255, 0.2);
+    --error-color: #ef4444;
+    --resume-glow: rgba(37, 99, 235, 0.2);
+    --resume-accent: #2563eb;
+  }
+  
+  /* Light mode variables */
+  body.light-mode {
+    --resume-bg: #f6f7fb;
+    --resume-text-color: #000000;
+    --resume-card-bg: rgba(255, 255, 255, 0.5);
+    --resume-card-shadow: rgba(0,0,0,.08);
+    --resume-button-bg: #2563eb;
+    --resume-button-color: white;
+    --resume-button-hover-bg: #1d4ed8;
+    --resume-section-bg: rgba(255, 255, 255, 0.3);
+    --resume-controls-bg: rgba(243, 244, 246, 0.5);
+    --resume-controls-text: #000000;
+    --resume-border: rgba(255, 255, 255, 0.2);
+    --error-color: #ef4444;
+    --resume-glow: rgba(37, 99, 235, 0.2);
+    --resume-accent: #2563eb;
+  }
+  
+  /* Dark mode variables */
+  body.dark-mode {
+    --resume-bg: #1a1a2e;
+    --resume-text-color: #ffffff;
+    --resume-card-bg: rgba(30, 30, 50, 0.5);
+    --resume-card-shadow: rgba(0,0,0,0.3);
+    --resume-button-bg: #4cc9f0;
+    --resume-button-color: #1a1a2e;
+    --resume-button-hover-bg: #3db8e6;
+    --resume-section-bg: rgba(40, 40, 60, 0.3);
+    --resume-controls-bg: rgba(37, 37, 56, 0.5);
+    --resume-controls-text: #ffffff;
+    --resume-border: rgba(255, 255, 255, 0.2);
+    --error-color: #f87171;
+    --resume-glow: rgba(76, 201, 240, 0.2);
+    --resume-accent: #4cc9f0;
+  }
+  
+  body {
+    font-family: system-ui, Arial, sans-serif;
+    background: var(--resume-bg);
+    color: var(--resume-text-color);
+    margin: 0;
+    padding: 20px;
+    transition: background 0.5s ease, color 0.5s ease;
+    text-align: left;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    transition: max-width 0.5s ease;
+    text-align: left;
+  }
+  
+  h1 {
+    text-align: center;
+    margin: 15px 0 30px;
+    font-size: 40px;
+    font-weight: 600;
+    color: var(--resume-text-color);
+    opacity: 0;
+    animation: fadeInDown 1s ease forwards;
+  }
+  
+  .resume-card {
+    background: var(--resume-card-bg);
+    backdrop-filter: blur(20px);
+    border-radius: 25px;
+    box-shadow: 0 15px 50px var(--resume-card-shadow),
+                0 0 30px var(--resume-glow);
+    padding: 40px;
+    margin-bottom: 40px;
+    border: 1px solid var(--resume-border);
+    opacity: 0;
+    animation: fadeInUp 0.8s ease forwards;
+    transition: all 0.5s ease;
+    transform-origin: center;
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+  }
+  
+  .resume-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 60%);
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .resume-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 60px var(--resume-card-shadow),
+                0 0 40px var(--resume-glow);
+    border-color: var(--resume-button-bg);
+  }
+  
+  .skills-intro {
+    text-align: center;
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 2;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--resume-text-color);
+  }
+  
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .skill-category-card {
+    background: var(--resume-section-bg);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .skill-category-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--resume-accent);
+    border-radius: 20px 20px 0 0;
+  }
+  
+  .skill-category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  }
+  
+  .category-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 15px;
+  }
+  
+  .category-icon {
+    font-size: 32px;
+    color: var(--resume-accent);
+  }
+  
+  .category-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--resume-accent);
+    margin: 0;
+  }
+  
+  .skill-item {
+    margin-bottom: 20px;
+  }
+  
+  .skill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  
+  .skill-name {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--resume-text-color);
+  }
+  
+  .skill-level {
+    font-size: 14px;
+    color: var(--resume-controls-text);
+    font-weight: 500;
+  }
+  
+  .skill-bar-container {
+    height: 8px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .skill-bar {
+    height: 100%;
+    background: var(--resume-accent);
+    border-radius: 4px;
+    transition: width 1s ease;
+    position: relative;
+  }
+  
+  .skill-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  
+  .skill-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+  }
+  
+  .skill-tag {
+    background: var(--resume-button-bg);
+    color: var(--resume-button-color);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .skill-tag::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+  }
+  
+  .skill-tag:hover::before {
+    left: 100%;
+  }
+  
+  .skill-tag:hover {
+    background: var(--resume-button-hover-bg);
+    transform: translateY(-2px);
+  }
+  
+  .download-button {
+    display: inline-block;
+    margin: 30px auto;
+    background: var(--resume-button-bg);
+    color: var(--resume-button-color);
+    padding: 18px 36px;
+    border-radius: 15px;
+    text-decoration: none;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    font-size: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .download-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+  }
+  
+  .download-button:hover::before {
+    left: 100%;
+  }
+  
+  .download-button:hover {
+    background: var(--resume-button-hover-bg);
+    transform: translateY(-6px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  }
+  
+  .download-container {
+    text-align: center;
+    margin-top: 40px;
+  }
+  
+  /* Animations */
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 1200px) {
+    .container {
+      max-width: 90%;
+    }
+    
+    h1 {
+      font-size: 36px;
+    }
+  }
+  
+  @media (max-width: 992px) {
+    .container {
+      max-width: 90%;
+    }
+    
+    h1 {
+      font-size: 32px;
+    }
+    
+    .resume-card {
+      padding: 30px;
+    }
+    
+    .skills-grid {
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .container {
+      padding: 0 20px;
+      max-width: 100%;
+    }
+    
+    .resume-card {
+      padding: 25px;
+      margin-bottom: 30px;
+    }
+    
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+    
+    .skills-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    
+    .category-icon {
+      font-size: 28px;
+    }
+    
+    .category-title {
+      font-size: 20px;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .container {
+      padding: 0 15px;
+    }
+    
+    .resume-card {
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+    
+    h1 {
+      font-size: 24px;
+      margin-bottom: 15px;
+    }
+    
+    .skills-intro {
+      font-size: 16px;
+    }
+    
+    .category-header {
+      gap: 10px;
+    }
+    
+    .category-icon {
+      font-size: 24px;
+    }
+    
+    .category-title {
+      font-size: 18px;
+    }
+    
+    .skill-name {
+      font-size: 15px;
+    }
+    
+    .skill-level {
+      font-size: 13px;
+    }
+    
+    .download-button {
+      padding: 15px 30px;
+      font-size: 16px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .container {
+      padding: 0 10px;
+    }
+    
+    .resume-card {
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    
+    h1 {
+      font-size: 22px;
+    }
+    
+    .skills-intro {
+      font-size: 15px;
+    }
+    
+    .category-icon {
+      font-size: 22px;
+    }
+    
+    .category-title {
+      font-size: 16px;
+    }
+    
+    .skill-name {
+      font-size: 14px;
+    }
+    
+    .skill-level {
+      font-size: 12px;
+    }
+    
+    .skill-bar-container {
+      height: 6px;
+    }
+    
+    .download-button {
+      padding: 12px 24px;
+      font-size: 14px;
+    }
+  }
+</style>
+
+<div class="container" >
+  <h1 id="skills-title">My Skills</h1>
+  
+  <div class="resume-card">
+    <div class="skills-intro">
+      <p>Here's a comprehensive overview of my technical skills and expertise. I'm continuously learning and expanding my skillset to stay current with industry trends and technologies.</p>
+    </div>
+    
+    <div class="skills-grid">
+      <div class="skill-category-card">
+        <div class="category-header">
+          <div class="category-icon">💻</div>
+          <h2 class="category-title">Programming Languages</h2>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">Python</span>
+            <span class="skill-level">Skillful</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 85%"></div>
+          </div>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">Java</span>
+            <span class="skill-level">Skillful</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 80%"></div>
+          </div>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">Kotlin</span>
+            <span class="skill-level">Skillful</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 75%"></div>
+          </div>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">C++</span>
+            <span class="skill-level">Skillful</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 70%"></div>
+          </div>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">ABAP</span>
+            <span class="skill-level">Beginner</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 30%"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="skill-category-card">
+        <div class="category-header">
+          <div class="category-icon">🛠️</div>
+          <h2 class="category-title">Frameworks & Technologies</h2>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">Django</span>
+            <span class="skill-level">Experienced</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 90%"></div>
+          </div>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">Computer Vision</span>
+            <span class="skill-level">Experienced</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 85%"></div>
+          </div>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">OpenCV</span>
+            <span class="skill-level">Skillful</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 80%"></div>
+          </div>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">Tkinter</span>
+            <span class="skill-level">Skillful</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 75%"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="skill-category-card">
+        <div class="category-header">
+          <div class="category-icon">☁️</div>
+          <h2 class="category-title">Cloud & Database</h2>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">Azure Fundamentals</span>
+            <span class="skill-level">Certified</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 80%"></div>
+          </div>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">MongoDB</span>
+            <span class="skill-level">Certified</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 85%"></div>
+          </div>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">PostgreSQL</span>
+            <span class="skill-level">Skillful</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 75%"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="skill-category-card">
+        <div class="category-header">
+          <div class="category-icon">🔒</div>
+          <h2 class="category-title">Security</h2>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">Zero Trust Security</span>
+            <span class="skill-level">Certified</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 75%"></div>
+          </div>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">OAuth 2.0</span>
+            <span class="skill-level">Skillful</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 70%"></div>
+          </div>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">JWT Authentication</span>
+            <span class="skill-level">Skillful</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 75%"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="skill-category-card">
+        <div class="category-header">
+          <div class="category-icon">🤝</div>
+          <h2 class="category-title">Soft Skills</h2>
+        </div>
+        
+        <div class="skill-tags-container">
+          <span class="skill-tag">Teamwork</span>
+          <span class="skill-tag">Collaboration</span>
+          <span class="skill-tag">Leadership</span>
+          <span class="skill-tag">Problem-Solving</span>
+          <span class="skill-tag">Communication</span>
+          <span class="skill-tag">Time Management</span>
+          <span class="skill-tag">Adaptability</span>
+          <span class="skill-tag">Critical Thinking</span>
+        </div>
+      </div>
+      
+      <div class="skill-category-card">
+        <div class="category-header">
+          <div class="category-icon">📱</div>
+          <h2 class="category-title">Development Tools</h2>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">Git</span>
+            <span class="skill-level">Skillful</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 85%"></div>
+          </div>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">VS Code</span>
+            <span class="skill-level">Skillful</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 90%"></div>
+          </div>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">Android Studio</span>
+            <span class="skill-level">Skillful</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 80%"></div>
+          </div>
+        </div>
+        
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">Postman</span>
+            <span class="skill-level">Skillful</span>
+          </div>
+          <div class="skill-bar-container">
+            <div class="skill-bar" style="width: 75%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="download-container">
+      <a href="{{ resume_pdf_url }}" class="download-button" download id="download-resume">
+        📄 Download Resume PDF
+      </a>
+    </div>
+  </div>
+</div>
+<script>
+  // Typing effect for the heading
+  function typeText(element, text, delay = 100) {
+    let i = 0;
+    element.textContent = "";
+    element.style.opacity = 1;
+    const interval = setInterval(() => {
+      element.textContent += text[i];
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+      }
+    }, delay);
+  }
+  
+  // Set theme based on time of day
+  function setThemeByTime() {
+    const hour = new Date().getHours();
+    const body = document.body;
+    
+    // Day mode: 6 AM (6) to 6 PM (18)
+    // Night mode: 6 PM (18) to 6 AM (6)
+    if (hour >= 6 && hour < 18) {
+      body.className = 'light-mode';
+    } else {
+      body.className = 'dark-mode';
+    }
+  }
+  
+  // Animate skill bars on scroll
+  function animateSkillBars() {
+    const skillBars = document.querySelectorAll('.skill-bar');
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const width = entry.target.style.width;
+          entry.target.style.width = '0';
+          setTimeout(() => {
+            entry.target.style.width = width;
+          }, 200);
+          observer.unobserve(entry.target);
+        }
+      });
+    });
+    
+    skillBars.forEach(bar => {
+      observer.observe(bar);
+    });
+  }
+  
+  // Initialize when DOM is loaded
+  window.addEventListener('DOMContentLoaded', () => {
+    const titleEl = document.getElementById('skills-title');
+    
+    // Set theme based on current time
+    setThemeByTime();
+    
+    // Update theme every minute to handle time changes
+    setInterval(setThemeByTime, 60000);
+    
+    // Start typing animation for the title
+    setTimeout(() => {
+      typeText(titleEl, "My Skills", 100);
+    }, 500);
+    
+    // Initialize skill bar animations
+    animateSkillBars();
+    
+    // Set up download button
+    document.getElementById('download-resume').addEventListener('click', function(e) {
+      e.preventDefault();
+      const url = "{{ resume_pdf_url }}";
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'VENKATESWARA_RAO_BHIMASINGI_RESUME.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  });
+</script>
+{% endblock %}

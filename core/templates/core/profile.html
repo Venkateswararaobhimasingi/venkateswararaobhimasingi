@@ -1,0 +1,685 @@
+{% extends "core/newhome.html" %}
+{% block content %}
+<link
+  rel="stylesheet"
+  href="https://use.fontawesome.com/releases/v6.4.0/css/all.css"
+/>
+<section class="profile-container">
+  <div class="profile-img" id="profileImg">
+    <img src="{{ img_url }}" alt="Profile">
+  </div>
+  <h2 class="profile-name-first" id="firstName"></h2>
+  <h2 class="profile-name-last" id="lastName"></h2>
+  <h3 class="profile-role" id="profileRole">role ??? ....</h3>
+  <div class="profile-bio" id="profileBio"></div>
+  <div class="profile-contact" id="profileContact">
+    <div class="contact-item">
+      <i class="fas fa-envelope"></i>
+      <span id="contactEmail"></span>
+    </div>
+    <div class="contact-item">
+      <i class="fas fa-phone"></i>
+      <span id="contactPhone"></span>
+    </div>
+  </div>
+  <div class="profile-stats" id="profileStats">
+    <div class="stat">
+      <span class="stat-number" data-target="{{ project_count }}">0</span>
+      <span class="stat-label">Projects</span>
+    </div>
+    
+    <div class="stat">
+      <span class="stat-number" data-target="33">0</span>
+      <span class="stat-label">Certificates</span>
+    </div>
+  </div>
+  <div class="profile-socials" id="socialIcons">
+    <a href="https://www.linkedin.com/in/venkateswara-rao-bhimasingi-376981287/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="social-link">
+      <i class="fab fa-linkedin"></i>
+    </a>
+    <a href="https://github.com/Venkateswararaobhimasingi/" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="social-link">
+      <i class="fab fa-github"></i>
+    </a>
+    <a href="https://www.facebook.com/venkateshvenkatesh.venkateshvenkatesh.9026/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="social-link">
+      <i class="fab fa-facebook"></i>
+    </a>
+    <a href="https://www.instagram.com/b.venkateswara__rao/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="social-link">
+      <i class="fab fa-instagram"></i>
+    </a>
+  </div>
+</section>
+
+<style>
+  /* CSS Variables for theme switching */
+  :root {
+    --text-name: #ffffff;
+    --text-role: #dddddd;
+    --text-bio: #cccccc;
+    --text-contact: #aaaaaa;
+    --text-stat-label: #aaaaaa;
+    --social-icon-bg: rgba(255, 255, 255, 0.05);
+    --social-icon-border: rgba(255, 255, 255, 0.1);
+    --social-icon-color: rgba(255, 255, 255, 0.7);
+    --social-icon-hover-bg: rgba(255, 200, 90, 0.1);
+    --social-icon-hover-color: #ffc75f;
+    --stat-bg: rgba(255, 255, 255, 0.03);
+    --stat-border: rgba(255, 255, 255, 0.05);
+    --stat-number-color: #ffc75f;
+    --profile-glow: rgba(255, 200, 90, 0.3);
+    --transition-speed: 0.3s;
+  }
+  
+  /* Light mode variables */
+  body.light-mode {
+    --text-name: #090909ff;
+    --text-role: #060606ff;
+    --text-bio: #050505ff;
+    --text-contact: #0a0909ff;
+    --text-stat-label: #050404ff;
+    --social-icon-bg: rgba(0, 0, 0, 0.05);
+    --social-icon-border: rgba(0, 0, 0, 0.1);
+    --social-icon-color: rgba(0, 0, 0, 0.7);
+    --social-icon-hover-bg: rgba(228, 182, 43, 0.2);
+    --social-icon-hover-color: #dab530ff;
+    --stat-bg: rgba(0, 0, 0, 0.03);
+    --stat-border: rgba(0, 0, 0, 0.05);
+    --stat-number-color: #111112ff;
+    --profile-glow: rgba(48, 106, 182, 0.3);
+  }
+  
+  /* Smooth transition for theme changes */
+  body {
+    transition: background-color 0.5s ease, color 0.5s ease;
+  }
+  
+  .profile-container {
+    transition: color 0.5s ease;
+  }
+  
+  /* Profile container - no background */
+  .profile-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 15;
+    pointer-events: none;
+    padding: 20px;
+    overflow: hidden;
+  }
+  
+  /* Profile image with movement animation */
+  .profile-img {
+    position: absolute;
+    top: 90px;
+    left: 20px;
+    width: 160px;
+    height: 160px;
+    opacity: 0;
+    transition: left 1.5s cubic-bezier(0.42, 0, 0.58, 1), opacity 0.5s ease;
+    z-index: 2;
+  }
+  
+  .profile-img img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 4px solid var(--social-icon-border);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    object-fit: cover;
+  }
+  
+  /* First name - positioned to the left of the image */
+  .profile-name-first {
+    position: absolute;
+    top: 110px;
+    left: 210px;
+    font-size: 30px;
+    font-weight: bold;
+    color: var(--text-name);
+    opacity: 0;
+    transition: opacity 1s ease;
+    white-space: nowrap;
+  }
+  
+  /* Last name - positioned below the first name */
+  .profile-name-last {
+    position: absolute;
+    top: 150px;
+    left: 210px;
+    font-size: 30px;
+    font-weight: bold;
+    color: var(--text-name);
+    opacity: 0;
+    transition: opacity 1s ease;
+    white-space: nowrap;
+  }
+  
+  /* Profile role with animation */
+  .profile-role {
+    position: absolute;
+    top: 200px;
+    left: 210px;
+    font-size: 26px;
+    color: var(--text-role);
+    opacity: 0;
+    transition: opacity 1s ease;
+    white-space: nowrap;
+  }
+  
+  /* Profile bio with animation */
+  .profile-bio {
+    position: absolute;
+    top: 270px;
+    left: 210px;
+    right: 350px;
+    font-size: 18px;
+    color: var(--text-bio);
+    line-height: 1.5;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.8s ease, opacity 0.8s ease;
+    text-align: left;
+    word-wrap: break-word;
+  }
+  
+  .profile-bio.visible {
+    max-height: 150px;
+    opacity: 1;
+  }
+  
+  /* Profile contact information */
+  .profile-contact {
+    position: absolute;
+    top: 410px;
+    left: 210px;
+    right: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+  
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-contact);
+    font-size: 16px;
+    text-align: left;
+  }
+  
+  .contact-item i {
+    width: 20px;
+    text-align: center;
+    font-size: 18px;
+  }
+  
+  /* Profile stats with animation */
+  .profile-stats {
+    position: absolute;
+    top: 470px;
+    left: 160px;
+    right: 100px;
+    display: flex;
+    justify-content: space-around;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 1s ease, transform 1s ease;
+  }
+  
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--stat-bg);
+    border: 1px solid var(--stat-border);
+    min-width: 100px;
+  }
+  
+  .stat-number {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--stat-number-color);
+    text-shadow: 0 0 10px var(--profile-glow);
+  }
+  
+  .stat-label {
+    font-size: 16px;
+    color: var(--text-stat-label);
+    margin-top: 5px;
+  }
+  
+  /* Social icons with enhanced animation */
+  .profile-socials {
+    position: absolute;
+    top: 550px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 1s ease, transform 1s ease;
+  }
+  
+  .social-link {
+    font-size: 28px;
+    color: var(--social-icon-color);
+    transition: all var(--transition-speed) ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: var(--social-icon-bg);
+    border: 1px solid var(--social-icon-border);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    pointer-events: all;
+  }
+  
+  .social-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--social-icon-hover-bg);
+    border-radius: 50%;
+    transform: scale(0);
+    transition: transform 0.5s ease;
+    z-index: -1;
+  }
+  
+  .social-link:hover {
+    color: var(--social-icon-hover-color);
+    transform: translateY(-8px) scale(1.05);
+    box-shadow: 0 10px 20px var(--profile-glow);
+  }
+  
+  .social-link:hover::before {
+    transform: scale(1);
+  }
+  
+  .social-link:active {
+    transform: translateY(-4px) scale(0.98);
+    box-shadow: 0 5px 10px var(--profile-glow);
+  }
+  
+  /* Add ripple effect on click */
+  .social-link::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+  
+  .social-link:active::after {
+    width: 300px;
+    height: 300px;
+  }
+  
+  /* Desktop responsive adjustments */
+  @media (min-width: 768px) {
+    .profile-img.moved {
+      left: calc(73% - 120px); /* 15% gap from right edge */
+    }
+  }
+  
+  /* Mobile responsive adjustments */
+  @media (max-width: 767px) {
+    .profile-container {
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    
+    .profile-img {
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 100px;
+      transition: opacity 0.5s ease; /* No horizontal movement on mobile */
+    }
+    
+    .profile-name-first {
+      top: 180px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 22px;
+    }
+    
+    .profile-name-last {
+      top: 210px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 22px;
+    }
+    
+    .profile-role {
+      top: 240px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 18px;
+    }
+    
+    .profile-bio {
+      top: 280px;
+      left: 20px;
+      right: 20px;
+      font-size: 15px;
+    }
+    
+    .profile-contact {
+      top: 380px;
+      left: 20px;
+      right: 20px;
+    }
+    
+    .profile-stats {
+      top: 460px;
+      left: 20px;
+      right: 20px;
+    }
+    
+    .profile-socials {
+      top: 540px;
+    }
+    
+    .stat {
+      min-width: 90px;
+    }
+    
+    .stat-number {
+      font-size: 24px;
+    }
+    
+    .stat-label {
+      font-size: 14px;
+    }
+    
+    .social-link {
+      width: 45px;
+      height: 45px;
+      font-size: 22px;
+    }
+    
+    .contact-item {
+      font-size: 15px;
+    }
+  }
+  
+  /* Small mobile responsive adjustments (480px and below) */
+  @media (max-width: 480px) {
+    .profile-img {
+      top: 50px;
+      width: 80px;
+      height: 80px;
+    }
+    
+    .profile-name-first {
+      top: 150px;
+      font-size: 20px;
+    }
+    
+    .profile-name-last {
+      top: 180px;
+      font-size: 20px;
+    }
+    
+    .profile-role {
+      top: 210px;
+      font-size: 16px;
+    }
+    
+    .profile-bio {
+      top: 250px;
+      left: 15px;
+      right: 30px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    
+    .profile-contact {
+      top: 400px;
+      left: 15px;
+      right: 15px;
+      gap: 10px;
+    }
+    
+    .profile-stats {
+      top: 480px;
+      left: 15px;
+      right: 15px;
+      gap: 10px;
+    }
+    
+    .profile-socials {
+      top: 600px;
+      gap: 15px;
+    }
+    
+    .stat {
+      min-width: 80px;
+      padding: 10px;
+    }
+    
+    .stat-number {
+      font-size: 20px;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+    }
+    
+    .social-link {
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+    }
+    
+    .contact-item {
+      font-size: 14px;
+      gap: 10px;
+    }
+    
+    .contact-item i {
+      font-size: 16px;
+      width: 18px;
+    }
+  }
+</style>
+
+<script>
+  // Function to set theme based on time of day
+  function setThemeByTime() {
+    const hour = new Date().getHours();
+    const body = document.body;
+    
+    // Remove existing theme classes
+    body.classList.remove('light-mode', 'dark-mode');
+    
+    // Set theme based on time: 6 AM to 6 PM is light mode
+    if (hour >= 6 && hour < 18) {
+      body.classList.add('light-mode');
+    } else {
+      body.classList.add('dark-mode');
+    }
+  }
+  
+  // Typing effect for text elements
+  function typeText(element, text, delay = 100, callback) {
+    let i = 0;
+    element.textContent = "";
+    element.style.opacity = 1;
+    const interval = setInterval(() => {
+      element.textContent += text[i];
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+        if (callback) callback();
+      }
+    }, delay);
+  }
+  
+  // Animate numbers counting up
+  function animateNumber(element, target, duration = 1000) {
+    let start = 0;
+    const increment = target / (duration / 16);
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= target) {
+        element.textContent = target;
+        clearInterval(timer);
+      } else {
+        element.textContent = Math.floor(start);
+      }
+    }, 16);
+  }
+  
+  // Initialize animations when DOM is loaded
+  window.addEventListener('DOMContentLoaded', () => {
+    // Set theme based on current time
+    setThemeByTime();
+    
+    // Update theme every minute to handle time changes while page is open
+    setInterval(setThemeByTime, 60000);
+    
+    const profileImg = document.getElementById('profileImg');
+    const firstNameEl = document.getElementById('firstName');
+    const lastNameEl = document.getElementById('lastName');
+    const roleEl = document.getElementById('profileRole');
+    const bioEl = document.getElementById('profileBio');
+    const contactEl = document.getElementById('profileContact');
+    const statsEl = document.getElementById('profileStats');
+    const socialEl = document.getElementById('socialIcons');
+    const emailEl = document.getElementById('contactEmail');
+    const phoneEl = document.getElementById('contactPhone');
+    const container = document.querySelector('.profile-container');
+    
+    // Check if content overflows on desktop
+    function checkOverflow() {
+      if (window.innerWidth >= 768) {
+        const contentHeight = profileImg.offsetTop + 
+                             parseInt(window.getComputedStyle(profileImg).height) +
+                             parseInt(window.getComputedStyle(firstNameEl).height) +
+                             parseInt(window.getComputedStyle(lastNameEl).height) +
+                             parseInt(window.getComputedStyle(roleEl).height) +
+                             parseInt(window.getComputedStyle(bioEl).height) +
+                             parseInt(window.getComputedStyle(contactEl).height) +
+                             parseInt(window.getComputedStyle(statsEl).height) +
+                             parseInt(window.getComputedStyle(socialEl).height) +
+                             100; // Extra padding
+        
+        if (contentHeight > window.innerHeight) {
+          container.classList.add('overflow');
+        } else {
+          container.classList.remove('overflow');
+        }
+      }
+    }
+    
+    // Start with image animation
+    setTimeout(() => {
+      profileImg.style.opacity = 1;
+      
+      // Move image to the right (desktop) or center (mobile)
+      setTimeout(() => {
+        if (window.innerWidth >= 768) {
+          // Desktop: move image to the right with 5% gap
+          profileImg.classList.add('moved');
+        }
+        
+        // After image animation completes, reveal all other elements sequentially
+        setTimeout(() => {
+          // Reveal first name
+          firstNameEl.style.opacity = 1;
+          typeText(firstNameEl, "Venkateswara Rao", 80, () => {
+            // Reveal last name
+            lastNameEl.style.opacity = 1;
+            typeText(lastNameEl, "Bhimasingi", 80, () => {
+              // Reveal role
+              roleEl.style.opacity = 1;
+              typeText(roleEl, "Finding Job ...", 60, () => {
+                // Reveal bio
+                setTimeout(() => {
+                  bioEl.classList.add('visible');
+                  typeText(bioEl, "Passionate and versatile developer with strong skills in web development, programming, and problem-solving. Eager to learn and adapt to new technologies, deliver high-quality solutions, and contribute effectively to any project or team. Motivated to take on challenging opportunities and make a meaningful impact in dynamic environments", 0, () => {
+                    // Reveal contact info
+                    setTimeout(() => {
+                      contactEl.style.opacity = 1;
+                      typeText(emailEl, "srinu19773@gmail.com", 50, () => {
+                        typeText(phoneEl, "+91 9491019773", 50, () => {
+                          // Reveal stats
+                          setTimeout(() => {
+                            statsEl.style.opacity = 1;
+                            statsEl.style.transform = "translateY(0)";
+                            
+                            // Animate numbers
+                            const statNumbers = document.querySelectorAll('.stat-number');
+                            statNumbers.forEach(num => {
+                              const target = parseInt(num.getAttribute('data-target'));
+                              animateNumber(num, target, 1500);
+                            });
+                            
+                            // Reveal social icons
+                            setTimeout(() => {
+                              socialEl.style.opacity = 1;
+                              socialEl.style.transform = "translateY(0)";
+                              
+                              // Check overflow after all elements are revealed
+                              checkOverflow();
+                            }, 500);
+                          }, 300);
+                        });
+                      });
+                    }, 300);
+                  });
+                }, 300);
+              });
+            });
+          });
+        }, 500);
+      }, 500);
+    }, 300);
+    
+    // Check overflow on window resize
+    window.addEventListener('resize', checkOverflow);
+    
+    // Add click feedback for social links
+    const socialLinks = document.querySelectorAll('.social-link');
+    socialLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        // Create a small visual feedback on click
+        const ripple = document.createElement('span');
+        ripple.classList.add('click-feedback');
+        this.appendChild(ripple);
+        
+        // Remove the ripple after animation completes
+        setTimeout(() => {
+          ripple.remove();
+        }, 600);
+      });
+    });
+  });
+</script>
+{% endblock content %}

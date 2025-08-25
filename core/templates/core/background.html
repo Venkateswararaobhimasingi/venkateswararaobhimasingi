@@ -1,0 +1,267 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Natural Day–Night Background with Twilight</title>
+<style>
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial; }
+
+  .sky {
+    position: fixed; inset: 0; z-index: 0;
+    transition: background 1s linear;
+  }
+  .haze {
+    position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    mix-blend-mode: screen; opacity: .5; filter: blur(18px);
+    background:
+      radial-gradient(60vh 40vh at 50% 110%, rgba(255,200,120,.18), transparent 60%),
+      radial-gradient(70vh 50vh at 50% 110%, rgba(110,170,255,.10), transparent 70%);
+    transition: opacity 1s linear;
+  }
+
+  canvas#stars, canvas#orb {
+    position: fixed; inset: 0; width: 100vw; height: 100vh; display: block;
+  }
+  #stars { z-index: 2; }
+  #orb   { z-index: 3; }
+
+  .content {
+    position: relative; z-index: 10; min-height: 100vh;
+    display: grid; place-items: center; text-align: center; color: white;
+    text-shadow: 0 2px 12px rgba(0,0,0,.6);
+    pointer-events: none;
+  }
+  .badge {
+    background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.2);
+    border-radius: 16px; padding: 10px 14px; backdrop-filter: blur(6px);
+  }
+</style>
+</head>
+<body>
+  <div id="sky" class="sky"></div>
+  <div id="haze" class="haze"></div>
+  <canvas id="stars"></canvas>
+  <canvas id="orb"></canvas>
+
+  <main class="content">
+    <div class="badge" id="label">Loading sky…</div>
+  </main>
+
+<script>
+(() => {
+  const DAY_START = 6;
+  const DAY_END   = 18;
+  const TWILIGHT  = 1.0; // twilight duration in hours (~1h)
+  const LUNAR_PERIOD = 29.530588;
+
+  const skyEl  = document.getElementById('sky');
+  const hazeEl = document.getElementById('haze');
+  const label  = document.getElementById('label');
+  const starsCanvas = document.getElementById('stars');
+  const orbCanvas   = document.getElementById('orb');
+  const sctx = starsCanvas.getContext('2d');
+  const octx = orbCanvas.getContext('2d');
+
+  let W, H, DPR = 1;
+  let stars = [];
+  let rafStars, rafOrbs;
+
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const rand = (min, max) => Math.random() * (max - min) + min;
+
+  function setCanvasSize() {
+    DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    W = starsCanvas.clientWidth; H = starsCanvas.clientHeight;
+    [starsCanvas, orbCanvas].forEach(c => {
+      c.width  = Math.floor(W * DPR);
+      c.height = Math.floor(H * DPR);
+      const ctx = (c === starsCanvas ? sctx : octx);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    });
+  }
+
+  function nowInfo() {
+    const d = new Date();
+    const hours = d.getHours() + d.getMinutes()/60;
+
+    const dayT = clamp((hours - DAY_START) / (DAY_END - DAY_START), 0, 1);
+    let nightHours = hours;
+    if (nightHours < DAY_START) nightHours += 24;
+    const nightT = clamp((nightHours - DAY_END) / (24 + DAY_START - DAY_END), 0, 1);
+
+    const epoch = new Date(Date.UTC(2000, 0, 6, 18, 14, 0));
+    const phaseFrac = (((d - epoch) / 86400000) % LUNAR_PERIOD) / LUNAR_PERIOD;
+    return { d, hours, dayT, nightT, phaseFrac };
+  }
+
+  function twilightFactor(h) {
+    let t = 0;
+    if (h >= DAY_START - TWILIGHT && h < DAY_START + TWILIGHT) {
+      t = 1 - Math.abs(h - DAY_START) / TWILIGHT;
+    } else if (h >= DAY_END - TWILIGHT && h < DAY_END + TWILIGHT) {
+      t = 1 - Math.abs(h - DAY_END) / TWILIGHT;
+    }
+    return clamp(t, 0, 1);
+  }
+
+  function setSkyByTime(info) {
+    const h = info.hours;
+    const twi = twilightFactor(h);
+    let bg;
+
+    if (twi > 0) {
+      // twilight colors (purple/orange blend)
+      const deep = 'rgb(25,20,50)';
+      const glow = 'rgb(255,120,80)';
+      bg = `linear-gradient(180deg, ${glow}, ${deep})`;
+      hazeEl.style.opacity = 0.4;
+    } else if (h >= DAY_START && h <= DAY_END) {
+      const tMidday = Math.abs((h - 12) / 6);
+      const deep = `rgb(${lerp(40, 20, tMidday)}, ${lerp(110, 80, tMidday)}, ${lerp(205, 170, tMidday)})`;
+      const light= `rgb(${lerp(140, 170, tMidday)}, ${lerp(190, 200, tMidday)}, ${lerp(255, 230, tMidday)})`;
+      bg = `linear-gradient(180deg, ${deep}, ${light})`;
+      hazeEl.style.opacity = 0.35;
+    } else {
+      const deep = 'rgb(8,12,28)';
+      const glow = 'rgb(10,20,60)';
+      bg = `linear-gradient(180deg, ${glow}, ${deep})`;
+      hazeEl.style.opacity = 0.2;
+    }
+    skyEl.style.background = bg;
+  }
+
+  function initStars() {
+    const area = W * H / 10000;
+    const count = Math.max(120, Math.floor(area * 40));
+    stars = new Array(count).fill(0).map(() => ({
+      x: rand(0, W), y: rand(0, H),
+      r: rand(0.4, 1.6),
+      alpha: rand(0.2, 0.8)
+    }));
+  }
+
+  function starDensityForHour(h) {
+    const twi = twilightFactor(h);
+    if (h >= DAY_START && h <= DAY_END) return twi * 0.6; // faint stars during twilight
+    return 1;
+  }
+
+  function drawStars() {
+    const h = new Date().getHours() + new Date().getMinutes()/60;
+    const density = starDensityForHour(h);
+    sctx.clearRect(0, 0, W, H);
+    if (density === 0) return;
+
+    stars.forEach(s => {
+      sctx.fillStyle = `rgba(255,255,255,${s.alpha*density})`;
+      sctx.beginPath(); sctx.arc(s.x, s.y, s.r, 0, Math.PI*2); sctx.fill();
+    });
+
+    rafStars = requestAnimationFrame(drawStars);
+  }
+
+  function sunPos(dayT) {
+    return { x: lerp(0.1, 0.9, dayT), y: 0.9 - Math.sin(dayT * Math.PI) * 0.7 };
+  }
+
+  function moonPos(nightT) {
+    return { x: lerp(0.1, 0.9, nightT), y: 0.9 - Math.sin(nightT * Math.PI) * 0.65 };
+  }
+
+  function drawSun(octx, cx, cy, size, alpha=1) {
+    octx.globalAlpha = alpha;
+    const r = size;
+    const gradient = octx.createRadialGradient(cx, cy, 0, cx, cy, r * 3);
+    gradient.addColorStop(0, 'rgba(255,230,150,0.95)');
+    gradient.addColorStop(1, 'rgba(255,160,40,0)');
+    octx.fillStyle = gradient;
+    octx.beginPath(); octx.arc(cx, cy, r * 3, 0, Math.PI*2); octx.fill();
+
+    octx.fillStyle = 'rgb(255,240,180)';
+    octx.beginPath(); octx.arc(cx, cy, r, 0, Math.PI*2); octx.fill();
+    octx.globalAlpha = 1;
+  }
+
+  function drawMoon(octx, cx, cy, size, phaseFrac, sunX, sunY, alpha=1) {
+    octx.globalAlpha = alpha;
+    const r = size;
+    const halo = octx.createRadialGradient(cx, cy, 0, cx, cy, r*3);
+    halo.addColorStop(0, 'rgba(200,210,255,0.35)');
+    halo.addColorStop(1, 'rgba(200,210,255,0)');
+    octx.fillStyle = halo;
+    octx.beginPath(); octx.arc(cx, cy, r*3, 0, Math.PI*2); octx.fill();
+
+    octx.fillStyle = 'rgb(100,100,120)';
+    octx.beginPath(); octx.arc(cx, cy, r, 0, Math.PI*2); octx.fill();
+
+    const angle = Math.atan2(sunY - cy, sunX - cx);
+    const phase = Math.cos(phaseFrac * 2 * Math.PI);
+    octx.save();
+    octx.translate(cx, cy);
+    octx.rotate(angle);
+
+    const lit = clamp((phase + 1) / 2, 0, 1);
+    const litW = r * lit * 2;
+    octx.beginPath();
+    octx.ellipse(0, 0, litW/2, r, 0, 0, Math.PI*2);
+    octx.fillStyle = 'rgb(230,235,255)';
+    octx.fill();
+
+    octx.restore();
+    octx.globalAlpha = 1;
+  }
+
+  function drawOrbs() {
+    const info = nowInfo();
+    setSkyByTime(info);
+    octx.clearRect(0, 0, W, H);
+
+    const h = info.hours;
+    const twi = twilightFactor(h);
+    const isDay = (h >= DAY_START && h <= DAY_END);
+
+    let sunX, sunY;
+    if (isDay || twi > 0) {
+      const pos = sunPos(info.dayT);
+      sunX = pos.x * W; sunY = pos.y * H;
+      drawSun(octx, sunX, sunY, 24, isDay ? 1 : twi);
+    } else {
+      sunX = -9999; sunY = -9999;
+    }
+
+    if (!isDay || twi > 0) {
+      const pos = moonPos(info.nightT);
+      drawMoon(octx, pos.x*W, pos.y*H, 22, info.phaseFrac, sunX, sunY, !isDay ? 1 : twi);
+    }
+
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hh = Math.floor(h)%12 || 12;
+    const mm = String(new Date().getMinutes()).padStart(2,'0');
+    label.textContent = `${hh}:${mm} ${ampm} • ${twi>0?'Twilight':(isDay?'Day':'Night')} • Moon phase ${(info.phaseFrac*29.53).toFixed(1)}/29.5d`;
+
+    rafOrbs = requestAnimationFrame(drawOrbs);
+  }
+
+  function init() {
+    setCanvasSize();
+    initStars();
+    cancelAnimationFrame(rafStars); cancelAnimationFrame(rafOrbs);
+    drawStars();
+    drawOrbs();
+  }
+  window.addEventListener('resize', () => { setCanvasSize(); initStars(); }, { passive: true });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { cancelAnimationFrame(rafStars); cancelAnimationFrame(rafOrbs); }
+    else { drawStars(); drawOrbs(); }
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>

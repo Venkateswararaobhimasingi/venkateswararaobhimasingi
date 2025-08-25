@@ -1,0 +1,742 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}My Page{% endblock %}</title>
+  <!-- FontAwesome for DESKTOP only (mobile uses your custom SVGs) -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    integrity="sha512-pVfGf1Qz2g6MHV6qHTj4a6ie7RRiZL19P049f0wob6EevUfxnmHnckzfDfXZBcv1tp0Tp0ZlfXvCJVa/i9XYZg=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+  <style>
+    :root{
+      --accent: #30c8f3ff;
+      --accent-2: #2daccfff;
+      --mobile-bg: rgba(0,0,0,0.8);
+      --mobile-border: rgba(94, 181, 224, 0.3);
+      --mobile-text: #ffffff;
+    }
+    html, body {
+      height: 100%; margin: 0; overflow-x: hidden;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial;
+      background: #000;
+    }
+    /* Background Layers (unchanged) */
+    .bg_day_night_sky {
+      position: fixed; inset: 0; z-index: 0;
+      transition: background 1s linear;
+    }
+    .bg_day_night_haze {
+      position: fixed; inset: 0; pointer-events: none; z-index: 1;
+      mix-blend-mode: screen; opacity: .5; filter: blur(18px);
+      background:
+        radial-gradient(60vh 40vh at 50% 110%, rgba(255,200,120,.18), transparent 60%),
+        radial-gradient(70vh 50vh at 50% 110%, rgba(110,170,255,.10), transparent 70%);
+      transition: opacity 1s linear;
+    }
+    canvas.bg_day_night_stars, canvas.bg_day_night_orb {
+      position: fixed; inset: 0; width: 100vw; height: 100vh; display: block;
+    }
+    canvas.bg_day_night_stars { z-index: 2; }
+    canvas.bg_day_night_orb   { z-index: 3; }
+    /* Desktop Navbar */
+    nav.bg_day_night_navbar {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 60px;
+      z-index: 20; display: flex; align-items: center;
+      justify-content: flex-start; padding: 0 10px;
+      backdrop-filter: blur(4px);
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      transition:
+        background-color 0.5s linear,
+        border-color 0.5s linear,
+        color 0.5s linear,
+        box-shadow 0.3s ease;
+      font-weight: 500;
+      background-color: rgba(0,0,0,0.25);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    nav.bg_day_night_navbar::-webkit-scrollbar { display: none; }
+    nav.bg_day_night_navbar .logo {
+      font-size: 1.3rem; font-weight: 700; color: white;
+      margin-right: 20px;
+      user-select:none;
+      white-space: nowrap;
+    }
+    .nav-fields-wrapper {
+      position: relative;
+      display: flex;
+      gap: 30px;
+      align-items: center;
+    }
+    nav.bg_day_night_navbar .nav-links {
+      display: flex; gap: 30px;
+      position: relative;
+      user-select:none;
+      white-space: nowrap;
+    }
+    /* Nav links desktop style */
+    nav.bg_day_night_navbar .nav-links a {
+      text-decoration: none;
+      color: white;
+      font-size: 1rem; 
+      position: relative;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+      display: flex;
+      align-items: center;
+      font-weight: 500;
+      gap: 8px;
+    }
+    nav.bg_day_night_navbar .nav-links a i {
+      font-size: 20px;
+      color: #aaa; /* default outline color */
+      font-weight: 400; /* regular */
+      transition: color 0.3s ease, transform 0.2s ease;
+    }
+    nav.bg_day_night_navbar .nav-links a:hover i {
+      color: var(--accent); /* hover color */
+      transform: scale(1.15);
+    }
+    nav.bg_day_night_navbar .nav-links a.active i {
+      font-weight: 900; /* solid */
+      color: var(--accent);  /* active color */
+      transform: scale(1.2);
+    }
+    nav.bg_day_night_navbar .nav-links a:hover,
+    nav.bg_day_night_navbar .nav-links a.active {
+      color: var(--accent-2);
+      text-shadow: 0 0 4px #ffd27f88;
+    }
+    .nav-highlight {
+      position: absolute;
+      bottom: 0;
+      height: 3px;
+      background: var(--accent-2);
+      border-radius: 3px 3px 0 0;
+      transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1), width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: left, width;
+      z-index: 5;
+    }
+    /* Mobile bottom nav - ICONS ARE CUSTOM SVGs */
+    .nav-icons {
+      display: none;
+      gap: 14px;
+      align-items: center;
+      justify-content: space-around;
+      width: 100%;
+      background: var(--mobile-bg);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--mobile-border);
+      padding: 10px 0 14px 0;
+      position: fixed;
+      bottom: 0; left: 0;
+      z-index: 25;
+      user-select: none;
+      transition: background .4s ease, border-color .4s ease;
+    }
+    .nav-icons button {
+      background: none;
+      border: none;
+      color: var(--mobile-text);      /* this becomes currentColor for svg */
+      font-size: 28px;
+      cursor: pointer;
+      transition: color 0.3s ease, box-shadow 0.35s ease, background-color 0.3s ease, transform .2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-weight: 600;
+      padding: 6px 0 8px 0;
+      border-radius: 16px;
+      width: 64px;
+      height: 64px;
+      position: relative;
+      outline-offset: 2px;
+    }
+    /* Your SVG icon sizing + outline→fill behavior */
+    .nav-icons button svg {
+      width: 28px;
+      height: 28px;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+    /* Default: outlined using currentColor */
+    .nav-icons button svg path,
+    .nav-icons button svg rect,
+    .nav-icons button svg circle,
+    .nav-icons button svg polygon,
+    .nav-icons button svg g path {
+      fill: none !important;
+      stroke: currentColor !important;
+      stroke-width: 2;
+      vector-effect: non-scaling-stroke;
+      transition: fill .3s ease, stroke .3s ease, transform .2s ease;
+    }
+    /* Active: filled with currentColor */
+    
+    .nav-icons button span {
+      font-size: 10px;
+      margin-top: 4px;
+      line-height: 1;
+      user-select:none;
+      pointer-events:none;
+    }
+    /* Mobile: hide labels for super clean layout (you can comment this out if you want labels) */
+    @media (max-width: 768px) {
+      .nav-icons button span { display: none; }
+    }
+    .nav-icons button:hover,
+    .nav-icons button:focus-visible {
+      color: var(--accent-2);
+      box-shadow: 0 0 18px #30c8f3ff;
+      transform: translateY(-2px);
+    }
+    .nav-icons button.active {
+      color: var(--accent);
+      background-color: rgba(90, 104, 255, 0.22);
+      box-shadow: 0 0 28px #308ef3ff;
+      transform: translateY(-4px) scale(1.06);
+      animation: pop .32s ease-out;
+    }
+    .nav-icons button.active svg {
+      transform: scale(1.1);
+    }
+    @keyframes pop {
+      0%   { transform: translateY(0) scale(.96); }
+      60%  { transform: translateY(-6px) scale(1.08); }
+      100% { transform: translateY(-4px) scale(1.06); }
+    }
+    /* Main content */
+    main.bg_day_night_content {
+      position: relative; z-index: 10; min-height: 100vh;
+      padding: 80px 20px 90px 20px; /* bottom padding for nav */
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: white;
+      text-shadow: 0 2px 12px rgba(0,0,0,.6);
+    }
+    /* Hide the time/moon phase text */
+    .bg_day_night_badge {
+      display: none;
+    }
+    /* Responsive: hide desktop navbar and show mobile nav */
+    @media (max-width: 768px) {
+      nav.bg_day_night_navbar { display: none; }
+      .nav-icons { display: flex; }
+    }
+    /* Fade/scale helper */
+    @keyframes fadeInScale {
+      0% { opacity: 0; transform: scale(0.95); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .fade-in-scale { animation: fadeInScale 0.4s ease forwards; }
+  </style>
+</head>
+<body>
+  <!-- Background layers -->
+  <div id="bg_day_night_sky" class="bg_day_night_sky"></div>
+  <div id="bg_day_night_haze" class="bg_day_night_haze"></div>
+  <canvas id="bg_day_night_stars" class="bg_day_night_stars"></canvas>
+  <canvas id="bg_day_night_orb" class="bg_day_night_orb"></canvas>
+  
+  <!-- Desktop Navbar (kept the same; icons are FontAwesome here) -->
+  <nav class="bg_day_night_navbar" id="bg_day_night_navbar" role="navigation" aria-label="Primary Navigation">
+    <div class="logo" aria-label="Site Logo">MySite</div>
+    <div class="nav-fields-wrapper">
+      <div class="nav-links" role="menubar" aria-label="Primary menu">
+        <a href="{% url 'home' %}"  role="menuitem" data-target="Home" class="active" tabindex="0" aria-current="page">Home</a>
+        <a href="{% url 'github' %}"  role="menuitem" data-target="Projects" tabindex="0">Projects</a>
+        <a href="{% url 'feed' %}"  role="menuitem" data-target="Feed" tabindex="0">Feed</a>
+        <a href="{% url 'certificate' %}"  role="menuitem" data-target="Certificates" tabindex="0">Certificates</a>
+        <a href="{% url 'skills' %}"  role="menuitem" data-target="Skills" tabindex="0">Skills</a>
+        <a href="{% url 'contact' %}"  role="menuitem" data-target="Contact" tabindex="0">Contact</a>
+        <a href="{% url 'resume' %}"  role="menuitem" data-target="Resume" tabindex="0">Resume</a>
+      </div>
+      <div class="nav-highlight" aria-hidden="true"></div>
+    </div>
+  </nav>
+  
+  <!-- Mobile bottom Navigation (CUSTOM SVGs ONLY) -->
+  <nav class="nav-icons" aria-label="Mobile Navigation">
+    <!-- HOME -->
+    <button type="button" aria-label="Home" data-target="Home" class="active" aria-pressed="true">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2.1 1 12h3v9h7v-6h2v6h7v-9h3z"/></svg>
+      <span>Home</span>
+    </button>
+    <!-- PROJECTS (your cloud-like icon) -->
+    <button type="button" aria-label="Projects" data-target="Projects" aria-pressed="false">
+     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><g data-name="File Coding"><path d="m53.707 11.293-11-11A1.122 1.122 0 0 0 42 0H11a1 1 0 0 0-1 1v62a1 1 0 0 0 1 1h42a1 1 0 0 0 1-1V12a1.09 1.09 0 0 0-.293-.707zM50.586 11H43V3.414zM12 62V2h29v10a1 1 0 0 0 1 1h10v49z" style="fill:#28282b"/><path d="M26.781 30.375a1 1 0 0 0-1.406-.156l-5 4a1 1 0 0 0 0 1.562l5 4a1 1 0 0 0 1.25-1.562L22.6 35l4.024-3.219a1 1 0 0 0 .157-1.406zM38.625 30.219a1 1 0 0 0-1.25 1.562L41.4 35l-4.024 3.219a1 1 0 0 0 1.25 1.562l5-4a1 1 0 0 0 0-1.562zM34.2 24.02a1 1 0 0 0-1.176.784l-4 20a1 1 0 0 0 1.96.392l4-20a1 1 0 0 0-.784-1.176z" style="fill:#28282b"/></g></svg>
+      <span>Projects</span>
+    </button>
+    <!-- FEED -->
+    <button type="button" aria-label="Feed" data-target="Feed" aria-pressed="false">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 9h6m-6 3h6m-6 3h6M6.996 9h.01m-.01 3h.01m-.01 3h.01M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"/>
+      </svg>
+      <span>Feed</span>
+    </button>
+    <!-- CERTIFICATES -->
+    <button type="button" aria-label="Certificates" data-target="Certificates" aria-pressed="false">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+        <g data-name="48-Certification">
+          <path d="m28.71 6.29-6-6A1 1 0 0 0 22 0H6a3 3 0 0 0-3 3v22a3 3 0 0 0 3 3h7v-2H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h15v4a2 2 0 0 0 2 2h4v17a1 1 0 0 1-1 1h-1v2h1a3 3 0 0 0 3-3V7a1 1 0 0 0-.29-.71z"/>
+          <path d="M19 14a5 5 0 0 0-5 5 5 5 0 0 0 1 3v9a1 1 0 0 0 1.71.71l2.29-2.3 2.29 2.29A1 1 0 0 0 23 31v-9a5 5 0 0 0 1-3 5 5 0 0 0-5-5zm2 14.59-1.29-1.29a1 1 0 0 0-1.41 0L17 28.59v-5a4.93 4.93 0 0 0 4 0zM19 22a3 3 0 1 1 3-3 3 3 0 0 1-3 3z"/>
+          <rect x="7" y="4" width="6" height="4" rx="1" ry="1"/>
+          <path d="M7 11h8v2H7zM7 15h5v2H7zM7 19h5v2H7z"/>
+        </g>
+      </svg>
+      <span>Certificates</span>
+    </button>
+    <!-- SKILLS (your large 128×128 SVG) -->
+    <button type="button" aria-label="Skills" data-target="Skills" aria-pressed="false">
+       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18.5A2.493 2.493 0 0 1 7.51 20H7.5a2.468 2.468 0 0 1-2.4-3.154 2.98 2.98 0 0 1-.85-5.274 2.468 2.468 0 0 1 .92-3.182 2.477 2.477 0 0 1 1.876-3.344 2.5 2.5 0 0 1 3.41-1.856A2.5 2.5 0 0 1 12 5.5m0 13v-13m0 13a2.493 2.493 0 0 0 4.49 1.5h.01a2.468 2.468 0 0 0 2.403-3.154 2.98 2.98 0 0 0 .847-5.274 2.468 2.468 0 0 0-.921-3.182 2.477 2.477 0 0 0-1.875-3.344A2.5 2.5 0 0 0 14.5 3 2.5 2.5 0 0 0 12 5.5"/>
+      </svg>
+      <span>Skills</span>
+    </button>
+    <!-- CONTACT (your 32×32 icon) -->
+    <button type="button" aria-label="Contact" data-target="Contact" aria-pressed="false">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+        <path d="M24.52 2h-15A3.48 3.48 0 0 0 6 5.48V7H5a1 1 0 0 0 0 2h1v6H5a1 1 0 0 0 0 2h1v6H5a1 1 0 0 0 0 2h1v1.52A3.48 3.48 0 0 0 9.48 30h15A3.48 3.48 0 0 0 28 26.52v-21A3.48 3.48 0 0 0 24.52 2zM26 26.52A1.49 1.49 0 0 1 24.52 28h-15A1.49 1.49 0 0 1 8 26.52V25a1 1 0 0 0 0-2v-6a1 1 0 0 0 0-2V9a1 1 0 0 0 0-2V5.48A1.49 1.49 0 0 1 9.48 4h15A1.49 1.49 0 0 1 26 5.48z"/>
+        <path d="M20 15.6a3.94 3.94 0 0 0 1-2.6 4 4 0 0 0-8 0 3.94 3.94 0 0 0 1 2.6 5.48 5.48 0 0 0-3 4.87V23a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2.53a5.48 5.48 0 0 0-3-4.87zM17 11a2 2 0 1 1-2 2 2 2 0 0 1 2-2zm4 11h-8v-1.53A3.48 3.48 0 0 1 16.47 17h1.06A3.48 3.48 0 0 1 21 20.47z"/>
+      </svg>
+      <span>Contact</span>
+    </button>
+    <!-- RESUME (your 32×32 icon) -->
+    <button type="button" aria-label="Resume" data-target="Resume" aria-pressed="false">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+    <path d="M6 2C4.895 2 4 2.895 4 4v16c0 1.105.895 2 2 2h12c1.105 0 2-.895 2-2V8l-6-6H6zm0 2h7v5h5v11H6V4zm2 2v2h8V6H8zm0 4v2h8v-2H8zm0 4v2h5v-2H8z"/>
+  </svg>
+      <span>Resume</span>
+    </button>
+  </nav>
+  
+  <!-- Main Content -->
+  <main class="bg_day_night_content" id="main-content" tabindex="-1">
+    <!-- The badge is now hidden -->
+    <div class="bg_day_night_badge" id="bg_day_night_label">Loading sky...</div>
+    
+    {% block content %}{% endblock %}
+  </main>
+  
+  <script>
+  (() => {
+    /* ====== CONSTANTS / DOM ====== */
+    const DAY_START = 6, DAY_END = 18, TWILIGHT = 1.0, LUNAR_PERIOD = 29.530588;
+    const skyEl   = document.getElementById('bg_day_night_sky');
+    const hazeEl  = document.getElementById('bg_day_night_haze');
+    const label   = document.getElementById('bg_day_night_label');
+    const navbar  = document.getElementById('bg_day_night_navbar');
+    const starsCanvas = document.getElementById('bg_day_night_stars');
+    const orbCanvas   = document.getElementById('bg_day_night_orb');
+    const sctx = starsCanvas.getContext('2d');
+    const octx = orbCanvas.getContext('2d');
+    const mobileNav = document.querySelector('.nav-icons');
+    const mobileButtons = Array.from(mobileNav.querySelectorAll('button'));
+    let W, H, DPR = 1, stars = [], rafStars, rafOrbs;
+    
+    /* ====== HELPERS ====== */
+    const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+    const lerp  = (a, b, t) => a + (b - a) * t;
+    const rand  = (min, max) => Math.random()*(max-min)+min;
+    
+    function setCanvasSize() {
+      DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      W = starsCanvas.clientWidth; H = starsCanvas.clientHeight;
+      [starsCanvas, orbCanvas].forEach(c => {
+        c.width = Math.floor(W*DPR);
+        c.height = Math.floor(H*DPR);
+        const ctx = (c===starsCanvas?sctx:octx);
+        ctx.setTransform(DPR,0,0,DPR,0,0);
+      });
+    }
+    
+    function nowInfo() {
+      const d = new Date();
+      const hours = d.getHours()+d.getMinutes()/60;
+      const dayT = clamp((hours-DAY_START)/(DAY_END-DAY_START),0,1);
+      let nightHours = hours; if(nightHours<DAY_START) nightHours+=24;
+      const nightT = clamp((nightHours-DAY_END)/(24+DAY_START-DAY_END),0,1);
+      const epoch = new Date(Date.UTC(2000,0,6,18,14,0));
+      const phaseFrac = (((d-epoch)/86400000)%LUNAR_PERIOD)/LUNAR_PERIOD;
+      return {d,hours,dayT,nightT,phaseFrac};
+    }
+    
+    function twilightFactor(h) {
+      let t = 0;
+      if(h >= DAY_START-TWILIGHT && h < DAY_START+TWILIGHT) t = 1-Math.abs(h-DAY_START)/TWILIGHT;
+      else if(h >= DAY_END-TWILIGHT && h < DAY_END+TWILIGHT) t = 1-Math.abs(h-DAY_END)/TWILIGHT;
+      return clamp(t,0,1);
+    }
+    
+    /* ====== THEME (desktop + mobile) ====== */
+    function setSkyByTime(info) {
+      const h = info.hours, twi = twilightFactor(h);
+      let bg, navbarBg, navbarBorder, textColor;
+      // Also set mobile bar colors via CSS variables
+      let mobileBg, mobileBorder, mobileText;
+      
+      if(twi>0) {
+        // Twilight
+        bg = `linear-gradient(180deg,rgb(255,120,80),rgb(25,20,50))`;
+        hazeEl.style.opacity = 0.4;
+        navbarBg = 'rgba(50,30,80,0.8)';
+        navbarBorder = 'rgba(200,180,220,0.3)';
+        textColor = 'rgba(255,255,255,0.95)';
+        navbar.style.boxShadow = '0 4px 12px rgba(255, 160, 40, 0.3)';
+        mobileBg = 'rgba(40,20,70,0.85)';
+        mobileBorder = 'rgba(230,200,255,0.35)';
+        mobileText = '#ffffff';
+      }
+      else if(h >= DAY_START && h <= DAY_END) {
+        // Day
+        const tMidday = Math.abs((h-12)/6);
+        const deep = `rgb(${lerp(40,20,tMidday)},${lerp(110,80,tMidday)},${lerp(205,170,tMidday)})`;
+        const light = `rgb(${lerp(140,170,tMidday)},${lerp(190,200,tMidday)},${lerp(255,230,tMidday)})`;
+        bg = `linear-gradient(180deg,${deep},${light})`;
+        hazeEl.style.opacity = 0.35;
+        navbarBg = 'rgba(255,255,255,0.15)';
+        navbarBorder = 'rgba(255,255,255,0.25)';
+        textColor = 'rgba(20,20,30,1)';
+        navbar.style.boxShadow = '0 2px 8px rgba(255, 255, 255, 0.15)';
+        mobileBg = 'rgba(255,255,255,0.12)';
+        mobileBorder = 'rgba(0,0,0,0.15)';
+        mobileText = '#101018';
+      }
+      else {
+        // Night
+        bg = `linear-gradient(180deg,rgb(10,20,60),rgb(8,12,28))`;
+        hazeEl.style.opacity = 0.2;
+        navbarBg = 'rgba(20,30,60,0.85)';
+        navbarBorder = 'rgba(150,180,220,0.25)';
+        textColor = 'rgba(255,255,255,0.9)';
+        navbar.style.boxShadow = '0 4px 14px rgba(40, 50, 100, 0.4)';
+        mobileBg = 'rgba(0,0,0,0.82)';
+        mobileBorder = 'rgba(180,200,255,0.28)';
+        mobileText = '#ffffff';
+      }
+      
+      skyEl.style.background = bg;
+      navbar.style.backgroundColor = navbarBg;
+      navbar.style.borderBottomColor = navbarBorder;
+      navbar.querySelector('.logo').style.color = textColor;
+      
+      navbar.querySelectorAll('.nav-links a').forEach(a => {
+        if(a.classList.contains('active')) {
+          a.style.color = getComputedStyle(document.documentElement).getPropertyValue('--accent-2') || '#ffd27f';
+          a.style.textShadow = '0 0 4px #ffd27f88';
+        } else {
+          a.style.color = textColor;
+          a.style.textShadow = 'none';
+        }
+      });
+      
+      // Apply mobile theme via CSS variables
+      document.documentElement.style.setProperty('--mobile-bg', mobileBg);
+      document.documentElement.style.setProperty('--mobile-border', mobileBorder);
+      document.documentElement.style.setProperty('--mobile-text', mobileText);
+    }
+    
+    /* ====== STARS ====== */
+    function initStars() {
+      const area = W*H/10000;
+      const count = Math.max(120, Math.floor(area*40));
+      stars = new Array(count).fill(0).map(() => ({
+        x: rand(0,W), y: rand(0,H), r: rand(0.4, 1.6), alpha: rand(0.2,0.8)
+      }));
+    }
+    
+    function starDensityForHour(h) {
+      const twi = twilightFactor(h);
+      if(h >= DAY_START && h <= DAY_END) return twi * 0.6;
+      return 1;
+    }
+    
+    function drawStars() {
+      const h = new Date().getHours()+ new Date().getMinutes()/60;
+      const density = starDensityForHour(h);
+      sctx.clearRect(0, 0, W, H);
+      if(density === 0) { 
+        rafStars = requestAnimationFrame(drawStars); 
+        return; 
+      }
+      
+      stars.forEach(s => {
+        sctx.fillStyle = `rgba(255,255,255,${s.alpha*density})`;
+        sctx.beginPath();
+        sctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+        sctx.fill();
+      });
+      
+      rafStars = requestAnimationFrame(drawStars);
+    }
+    
+    /* ====== SUN & MOON ====== */
+    function sunPos(dayT) { 
+      return { 
+        x: lerp(0.1, 0.9, dayT), 
+        y: 0.9 - Math.sin(dayT*Math.PI)*0.7 
+      }; 
+    }
+    
+    function moonPos(nightT) { 
+      return { 
+        x: lerp(0.1, 0.9, nightT), 
+        y: 0.9 - Math.sin(nightT*Math.PI)*0.65 
+      }; 
+    }
+    
+    function drawSun(octx, cx, cy, size, alpha=1) {
+      octx.globalAlpha = alpha;
+      const r = size;
+      const grad = octx.createRadialGradient(cx, cy, 0, cx, cy, r*3);
+      grad.addColorStop(0, 'rgba(255,230,150,0.95)');
+      grad.addColorStop(1, 'rgba(255,160,40,0)');
+      octx.fillStyle = grad;
+      octx.beginPath();
+      octx.arc(cx, cy, r*3, 0, Math.PI*2);
+      octx.fill();
+      
+      octx.fillStyle = 'rgb(255,240,180)';
+      octx.beginPath();
+      octx.arc(cx, cy, r, 0, Math.PI*2);
+      octx.fill();
+      
+      octx.globalAlpha = 1;
+    }
+    
+    function drawMoon(octx, cx, cy, size, phaseFrac, sunX, sunY, alpha=1) {
+      octx.globalAlpha = alpha;
+      const r = size;
+      
+      // Draw halo
+      const halo = octx.createRadialGradient(cx, cy, 0, cx, cy, r*3);
+      halo.addColorStop(0, 'rgba(200,210,255,0.35)');
+      halo.addColorStop(1, 'rgba(200,210,255,0)');
+      octx.fillStyle = halo;
+      octx.beginPath();
+      octx.arc(cx, cy, r*3, 0, Math.PI*2);
+      octx.fill();
+      
+      // Draw dark disk
+      octx.fillStyle = 'rgb(100,100,120)';
+      octx.beginPath();
+      octx.arc(cx, cy, r, 0, Math.PI*2);
+      octx.fill();
+      
+      // Calculate illumination direction (towards sun)
+      const angle = Math.atan2(sunY - cy, sunX - cx);
+      const phase = Math.cos(phaseFrac*2*Math.PI);
+      
+      octx.save();
+      octx.translate(cx, cy);
+      octx.rotate(angle);
+      
+      // Draw illuminated part
+      const lit = Math.max(0, Math.min(1, (phase+1)/2));
+      const litW = r*lit*2;
+      
+      octx.beginPath();
+      octx.ellipse(0, 0, litW/2, r, 0, 0, Math.PI*2);
+      octx.fillStyle = 'rgb(230,235,255)';
+      octx.fill();
+      
+      octx.restore();
+      octx.globalAlpha = 1;
+    }
+    
+    function drawOrbs() {
+      const info = nowInfo();
+      setSkyByTime(info);
+      octx.clearRect(0, 0, W, H);
+      
+      const h = info.hours;
+      const twi = twilightFactor(h);
+      const isDay = (h >= DAY_START && h <= DAY_END);
+      let sunX, sunY;
+      
+      // Calculate responsive sizes
+      const sunSize = Math.min(W, H) * 0.05;
+      const moonSize = Math.min(W, H) * 0.045;
+      
+      // Draw sun during day or twilight
+      if(isDay || twi > 0) {
+        const pos = sunPos(info.dayT);
+        sunX = pos.x * W; 
+        sunY = pos.y * H;
+        drawSun(octx, sunX, sunY, sunSize, isDay ? 1 : twi);
+      } else {
+        // Position sun offscreen when it's not visible
+        sunX = -9999; 
+        sunY = -9999; 
+      }
+      
+      // Draw moon during night or twilight
+      if(!isDay || twi > 0) {
+        const pos = moonPos(info.nightT);
+        const moonAlpha = twi > 0 ? twi : 1; // Use twilight factor or full opacity
+        drawMoon(octx, pos.x*W, pos.y*H, moonSize, info.phaseFrac, sunX, sunY, moonAlpha);
+      }
+      
+      // Update label with current time and sky status (but it's hidden via CSS)
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const hh = Math.floor(h) % 12 || 12;
+      const mm = String(new Date().getMinutes()).padStart(2, '0');
+      const timeStatus = twi > 0 ? 'Twilight' : (isDay ? 'Day' : 'Night');
+      label.textContent = `${hh}:${mm} ${ampm} • ${timeStatus} • Moon phase ${(info.phaseFrac*29.53).toFixed(1)}/29.5d`;
+      
+      rafOrbs = requestAnimationFrame(drawOrbs);
+    }
+    
+    /* ====== INIT / RESIZE / VISIBILITY ====== */
+    function init() {
+      setCanvasSize();
+      initStars();
+      cancelAnimationFrame(rafStars);
+      cancelAnimationFrame(rafOrbs);
+      drawStars();
+      drawOrbs();
+      initDesktopNav();
+      initMobileNav();
+    }
+    
+    window.addEventListener('resize', () => {
+      setCanvasSize();
+      initStars();
+      placeNavHighlight();
+    }, {passive:true});
+    
+    document.addEventListener('visibilitychange', () => {
+      if(document.hidden) {
+        cancelAnimationFrame(rafStars);
+        cancelAnimationFrame(rafOrbs);
+      } else {
+        drawStars();
+        drawOrbs();
+      }
+    });
+    
+    /* ====== DESKTOP NAV HIGHLIGHT ====== */
+   const navLinks = navbar.querySelectorAll('.nav-links a');
+const navHighlight = navbar.querySelector('.nav-highlight');
+let currentActive = navbar.querySelector('.nav-links a.active') || navLinks[0];
+
+function placeNavHighlight() {
+  if(!currentActive) return;
+  
+  const container = navbar.querySelector('.nav-links');
+  const containerRect = container.getBoundingClientRect();
+  const activeRect = currentActive.getBoundingClientRect();
+  
+  const left = activeRect.left - containerRect.left + container.scrollLeft;
+  const width = activeRect.width;
+  
+  navHighlight.style.left = left + 'px';
+  navHighlight.style.width = width + 'px';
+}
+
+function clearActiveLinks() { 
+  navLinks.forEach(a => a.classList.remove('active')); 
+}
+
+function initDesktopNav() {
+  placeNavHighlight();
+  
+  navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      if(link === currentActive) return;
+      clearActiveLinks();
+      link.classList.add('active');
+      currentActive = link;
+      placeNavHighlight();
+      updateMobileActive(link.dataset.target);
+      // NOTE: no e.preventDefault() → redirect works
+    });
+
+    link.addEventListener('keydown', e => {
+      if(e.key === 'Enter' || e.key === ' ') {
+        // Let normal navigation happen
+        link.click();
+      }
+    });
+  });
+  
+  window.addEventListener('resize', placeNavHighlight);
+}
+
+/* ====== MOBILE NAV (custom SVGs) ====== */
+function clearMobileActive() {
+  mobileButtons.forEach(btn => {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-pressed', 'false');
+  });
+}
+
+function updateMobileActive(target) {
+  clearMobileActive();
+  const btn = mobileButtons.find(b => b.dataset.target === target);
+  if(btn) {
+    btn.classList.add('active');
+    btn.setAttribute('aria-pressed', 'true');
+  }
+}
+
+function initMobileNav() {
+  mobileButtons.forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault(); // keep smooth scroll for mobile
+      const target = btn.dataset.target;
+      const desktopLink = Array.from(navLinks).find(a => a.dataset.target === target);
+      
+      if(desktopLink) {
+        desktopLink.click();
+        desktopLink.scrollIntoView({behavior:'smooth', inline:'center'});
+      } else {
+        updateMobileActive(target);
+      }
+    });
+    
+    btn.addEventListener('keydown', e => {
+      if(e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        btn.click();
+      }
+    });
+  });
+  
+  if(currentActive) updateMobileActive(currentActive.dataset.target);
+}
+
+/* ====== AUTO SET ACTIVE BASED ON URL ====== */
+function setActiveFromURL() {
+  const path = window.location.pathname;
+  navLinks.forEach(link => {
+    if(link.getAttribute("href") === path) {
+      clearActiveLinks();
+      link.classList.add("active");
+      currentActive = link;
+      placeNavHighlight();
+      updateMobileActive(link.dataset.target);
+    }
+  });
+}
+
+window.addEventListener("DOMContentLoaded", setActiveFromURL);
+
+
+
+    // Initialize everything
+    init();
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+{% extends "core/newhome.html" %}
+
+{% block content %}
+<section class="certificates-container">
+  <h2 class="title">My Certificates</h2>
+  <div class="cert-grid">
+    {% for cert in certs %}
+      <div class="cert-card">
+        <h3>{{ cert.name }}</h3>
+        {% if cert.date %}
+          <p class="date">{{ cert.date|date:"d M Y" }}</p>
+        {% endif %}
+        <div class="pdf-viewer">
+          <canvas id="pdf-canvas-{{ forloop.counter }}"></canvas>
+        </div>
+        <a href="{{ cert.file }}" target="_blank" class="view-btn">Open Full PDF</a>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<style>
+.certificates-container {
+  padding: 2rem;
+}
+.title {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.cert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+.cert-card {
+  background: var(--card-bg, rgba(255,255,255,0.1));
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.cert-card h3 {
+  margin: 0 0 0.5rem 0;
+  text-align: center;
+}
+.cert-card .date {
+  text-align: center;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  color: gray;
+}
+.pdf-viewer {
+  width: 100%;
+  height: 400px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f9f9f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.pdf-viewer canvas {
+  max-width: 100%;
+  height: auto;
+}
+.view-btn {
+  margin-top: 10px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: #007bff;
+  color: white;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.view-btn:hover {
+  background: #0056b3;
+}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  {% for cert in certs %}
+  (function() {
+    const url = "{{ cert.file }}";
+    const canvas = document.getElementById("pdf-canvas-{{ forloop.counter }}");
+    const ctx = canvas.getContext("2d");
+
+    pdfjsLib.getDocument(url).promise.then(pdf => {
+      pdf.getPage(1).then(page => {
+        const viewport = page.getViewport({ scale: 1.2 });
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        page.render({ canvasContext: ctx, viewport: viewport });
+      });
+    });
+  })();
+  {% endfor %}
+});
+</script>
+{% endblock %}

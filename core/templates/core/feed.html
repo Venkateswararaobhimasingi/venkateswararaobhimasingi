@@ -1,0 +1,476 @@
+{% extends "core/newhome.html" %}
+{% block content %}
+<style>
+  /* CSS Variables for theme switching */
+  :root {
+    --feed-bg: #f6f7fb;
+    --feed-text-color: #222;
+    --feed-card-bg: #ffffff;
+    --feed-card-shadow: rgba(0,0,0,.08);
+    --feed-meta-color: #666;
+    --feed-small-color: #999;
+    --feed-linkedin-bg: #0077b5;
+    --feed-linkedin-color: white;
+    --feed-github-bg: #333;
+    --feed-github-color: white;
+    --feed-view-more-color: #2563eb;
+    --feed-sync-btn-bg: #2563eb;
+    --feed-sync-btn-color: white;
+  }
+  
+  /* Light mode variables */
+  body.light-mode {
+    --feed-bg: #f6f7fb;
+    --feed-text-color: #222;
+    --feed-card-bg: #ffffff;
+    --feed-card-shadow: rgba(0,0,0,.08);
+    --feed-meta-color: #666;
+    --feed-small-color: #999;
+    --feed-linkedin-bg: #0077b5;
+    --feed-linkedin-color: white;
+    --feed-github-bg: #333;
+    --feed-github-color: white;
+    --feed-view-more-color: #2563eb;
+    --feed-sync-btn-bg: #2563eb;
+    --feed-sync-btn-color: white;
+  }
+  
+  /* Dark mode variables */
+  body.dark-mode {
+    --feed-bg: #1a1a2e;
+    --feed-text-color: #e0e0e0;
+    --feed-card-bg: rgba(30, 30, 50, 0.8);
+    --feed-card-shadow: rgba(0,0,0,0.3);
+    --feed-meta-color: #a0a0a0;
+    --feed-small-color: #808080;
+    --feed-linkedin-bg: #0077b5;
+    --feed-linkedin-color: white;
+    --feed-github-bg: #24292e;
+    --feed-github-color: white;
+    --feed-view-more-color: #4cc9f0;
+    --feed-sync-btn-bg: #4cc9f0;
+    --feed-sync-btn-color: #1a1a2e;
+  }
+  
+  body {
+    font-family: system-ui, Arial, sans-serif;
+    background: var(--feed-bg);
+    color: var(--feed-text-color);
+    margin: 0;
+    padding: 20px;
+    transition: background 0.5s ease, color 0.5s ease;
+    text-align: left;
+  }
+  
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: left;
+  }
+  
+  h1 {
+    margin: 10px 0 20px;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--feed-text-color);
+    opacity: 0;
+    animation: fadeInDown 1s ease forwards;
+    text-align: left;
+  }
+  
+  .card {
+    background: var(--feed-card-bg);
+    backdrop-filter: blur(5px);
+    border-radius: 10px;
+    box-shadow: 0 2px 6px var(--feed-card-shadow);
+    padding: 16px;
+    margin-bottom: 14px;
+    word-wrap: break-word;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    opacity: 0;
+    animation: fadeInUp 0.8s ease forwards;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: left;
+  }
+  
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px var(--feed-card-shadow);
+  }
+  
+  .meta {
+    color: var(--feed-meta-color);
+    font-size: 13px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    text-align: left;
+  }
+  
+  .platform {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .linkedin { 
+    background: var(--feed-linkedin-bg); 
+    color: var(--feed-linkedin-color); 
+  }
+  
+  .github { 
+    background: var(--feed-github-bg); 
+    color: var(--feed-github-color); 
+  }
+  
+  .small { 
+    font-size: 12px; 
+    color: var(--feed-small-color); 
+  }
+  
+  .title {
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 15px;
+    color: var(--feed-text-color);
+    text-align: left;
+  }
+  
+  .message {
+    white-space: pre-wrap;
+    color: var(--feed-text-color);
+    font-size: 14px;
+    line-height: 1.4;
+    overflow: hidden;
+    max-height: 80px; /* initial truncation */
+    position: relative;
+    transition: max-height 0.3s ease;
+    text-align: left;
+  }
+  
+  .message.expanded {
+    max-height: none;
+  }
+  
+  .view-more {
+    color: var(--feed-view-more-color);
+    cursor: pointer;
+    font-size: 13px;
+    display: inline-block;
+    margin-top: 6px;
+    transition: all 0.3s ease;
+    text-align: left;
+  }
+  
+  .view-more:hover {
+    text-decoration: underline;
+    transform: translateY(-1px);
+  }
+  
+  .sync-btn {
+    background: var(--feed-sync-btn-bg);
+    color: var(--feed-sync-btn-color);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    margin: 15px 0;
+    transition: all 0.3s ease;
+    text-align: left;
+  }
+  
+  .sync-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Animations */
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    .card { 
+      padding: 12px; 
+    }
+    
+    h1 { 
+      font-size: 18px; 
+    }
+  }
+  
+  /* Small mobile responsive adjustments (480px and below) */
+  @media (max-width: 480px) {
+    body {
+      padding: 15px;
+    }
+    
+    .container {
+      max-width: 100%;
+    }
+    
+    h1 {
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+    
+    .card {
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+    }
+    
+    .meta {
+      font-size: 12px;
+      margin-bottom: 8px;
+      gap: 4px;
+    }
+    
+    .platform {
+      padding: 2px 6px;
+      font-size: 11px;
+    }
+    
+    .small {
+      font-size: 11px;
+    }
+    
+    .title {
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    
+    .message {
+      font-size: 13px;
+      line-height: 1.3;
+      max-height: 70px;
+    }
+    
+    .view-more {
+      font-size: 12px;
+      margin-top: 5px;
+    }
+    
+    .sync-btn {
+      padding: 7px 10px;
+      font-size: 13px;
+      margin: 12px 0;
+      width: 100%;
+    }
+  }
+  /* Extra small mobile responsive adjustments (<= 360px) */
+@media (max-width: 360px) {
+  body {
+    padding: 10px;
+  }
+
+  .container {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  h1 {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .card {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    text-align: justify;
+  }
+
+  .meta {
+    font-size: 11px;
+    margin-bottom: 6px;
+    gap: 3px;
+  }
+
+  .platform {
+    padding: 2px 5px;
+    font-size: 10px;
+  }
+
+  .small {
+    font-size: 10px;
+  }
+
+  .title {
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .message {
+    font-size: 12px;
+    line-height: 1.25;
+    max-height: 60px;
+  }
+
+  .view-more {
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  .sync-btn {
+    padding: 6px 8px;
+    font-size: 12px;
+    margin: 10px 0;
+    width: 100%;
+  }
+}
+
+</style>
+<div class="container">
+  <h1 id="feed-title">My Feed</h1>
+  
+  <div id="feed">
+    {% for a in activities %}
+    <div class="card" data-index="{{ forloop.counter0 }}">
+      <div class="meta">
+        <span class="platform {% if a.platform == 'linkedin' %}linkedin{% else %}github{% endif %}">
+          {{ a.platform|title }}
+        </span>
+        <span class="small">{{ a.published_at|default:a.created_at|date:"Y-m-d H:i" }}</span>
+        {% if a.url %}
+          • <a href="{{ a.url }}" target="_blank">
+            {% if a.platform == 'linkedin' %}
+                View Post
+            {% elif a.platform == 'github' %}
+                View Project
+            {% else %}
+                View
+            {% endif %}
+          </a>
+        {% endif %}
+      </div>
+      {% if a.title %}
+        <div class="title">{{ a.title }}</div>
+      {% endif %}
+      <div class="message">{{ a.message|default:"(No text)" }}</div>
+      {% if a.message and a.message|length > 250 %}
+        <span class="view-more">View More</span>
+      {% endif %}
+    </div>
+    {% empty %}
+    <div class="card">
+      <p>No activity yet.</p>
+    </div>
+    {% endfor %}
+  </div>
+  
+ 
+</div>
+<script>
+  // Typing effect for the heading
+  function typeText(element, text, delay = 100) {
+    let i = 0;
+    element.textContent = "";
+    element.style.opacity = 1;
+    const interval = setInterval(() => {
+      element.textContent += text[i];
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+      }
+    }, delay);
+  }
+  
+  // Function to set theme based on time of day
+  function setThemeByTime() {
+    const hour = new Date().getHours();
+    const body = document.body;
+    
+    // Remove existing theme classes
+    body.classList.remove('light-mode', 'dark-mode');
+    
+    // Set theme based on time: 6 AM to 6 PM is light mode
+    if (hour >= 6 && hour < 18) {
+      body.classList.add('light-mode');
+    } else {
+      body.classList.add('dark-mode');
+    }
+  }
+  
+  // Set staggered animation delays
+  function setAnimationDelays() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+      const index = parseInt(card.getAttribute('data-index'));
+      card.style.animationDelay = `${index * 0.1}s`;
+    });
+  }
+  
+  // Initialize animations and theme when DOM is loaded
+  window.addEventListener('DOMContentLoaded', () => {
+    // Set theme based on current time
+    setThemeByTime();
+    
+    // Update theme every minute to handle time changes while page is open
+    setInterval(setThemeByTime, 60000);
+    
+    const titleEl = document.getElementById('feed-title');
+    
+    // Start typing animation for the title
+    setTimeout(() => {
+      typeText(titleEl, "My Feed", 100);
+    }, 500);
+    
+    // Set animation delays for cards
+    setAnimationDelays();
+    
+    // View more/less functionality
+    document.querySelectorAll('.view-more').forEach(btn => {
+      btn.addEventListener('click', function(){
+        const msg = this.previousElementSibling;
+        msg.classList.toggle('expanded');
+        this.textContent = msg.classList.contains('expanded') ? "View Less" : "View More";
+      });
+    });
+    
+    // Sync button functionality
+    document.getElementById('sync-btn').addEventListener('click', function() {
+      this.textContent = "Syncing...";
+      this.disabled = true;
+      
+      // Simulate sync process
+      setTimeout(() => {
+        this.textContent = "Sync Feed";
+        this.disabled = false;
+        
+        // Add a visual feedback
+        this.style.background = "var(--feed-sync-btn-bg)";
+        this.style.transform = "scale(0.95)";
+        
+        setTimeout(() => {
+          this.style.transform = "scale(1)";
+        }, 200);
+      }, 1500);
+    });
+  });
+</script>
+{% endblock %}

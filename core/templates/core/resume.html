@@ -1,0 +1,931 @@
+{% extends "core/newhome.html" %}
+{% block content %}
+<style>
+  /* CSS Variables for theme switching */
+  :root {
+    --resume-bg: #f6f7fb;
+    --resume-text-color: #000000;
+    --resume-card-bg: rgba(255, 255, 255, 0.5);
+    --resume-card-shadow: rgba(0,0,0,.08);
+    --resume-button-bg: #2563eb;
+    --resume-button-color: white;
+    --resume-button-hover-bg: #1d4ed8;
+    --resume-section-bg: rgba(255, 255, 255, 0.3);
+    --resume-controls-bg: rgba(243, 244, 246, 0.5);
+    --resume-controls-text: #000000;
+    --resume-border: rgba(255, 255, 255, 0.2);
+    --error-color: #ef4444;
+    --resume-glow: rgba(37, 99, 235, 0.2);
+    --resume-accent: #2563eb;
+  }
+  
+  /* Light mode variables */
+  body.light-mode {
+    --resume-bg: #f6f7fb;
+    --resume-text-color: #000000;
+    --resume-card-bg: rgba(255, 255, 255, 0.5);
+    --resume-card-shadow: rgba(0,0,0,.08);
+    --resume-button-bg: #2563eb;
+    --resume-button-color: white;
+    --resume-button-hover-bg: #1d4ed8;
+    --resume-section-bg: rgba(255, 255, 255, 0.3);
+    --resume-controls-bg: rgba(243, 244, 246, 0.5);
+    --resume-controls-text: #000000;
+    --resume-border: rgba(255, 255, 255, 0.2);
+    --error-color: #ef4444;
+    --resume-glow: rgba(37, 99, 235, 0.2);
+    --resume-accent: #2563eb;
+  }
+  
+  /* Dark mode variables */
+  body.dark-mode {
+    --resume-bg: #1a1a2e;
+    --resume-text-color: #ffffff;
+    --resume-card-bg: rgba(30, 30, 50, 0.5);
+    --resume-card-shadow: rgba(0,0,0,0.3);
+    --resume-button-bg: #4cc9f0;
+    --resume-button-color: #1a1a2e;
+    --resume-button-hover-bg: #3db8e6;
+    --resume-section-bg: rgba(40, 40, 60, 0.3);
+    --resume-controls-bg: rgba(37, 37, 56, 0.5);
+    --resume-controls-text: #ffffff;
+    --resume-border: rgba(255, 255, 255, 0.2);
+    --error-color: #f87171;
+    --resume-glow: rgba(76, 201, 240, 0.2);
+    --resume-accent: #4cc9f0;
+  }
+  
+  body {
+    font-family: system-ui, Arial, sans-serif;
+    background: var(--resume-bg);
+    color: var(--resume-text-color);
+    margin: 0;
+    padding: 20px;
+    transition: background 0.5s ease, color 0.5s ease;
+    text-align: left;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    transition: max-width 0.5s ease;
+    text-align: left;
+  }
+  
+  h1 {
+    text-align: center;
+    margin: 15px 0 30px;
+    font-size: 40px;
+    font-weight: 600;
+    color: var(--resume-text-color);
+    opacity: 0;
+    animation: fadeInDown 1s ease forwards;
+  }
+  
+  .resume-card {
+    background: var(--resume-card-bg);
+    backdrop-filter: blur(20px);
+    border-radius: 25px;
+    box-shadow: 0 15px 50px var(--resume-card-shadow),
+                0 0 30px var(--resume-glow);
+    padding: 40px;
+    margin-bottom: 40px;
+    border: 1px solid var(--resume-border);
+    opacity: 0;
+    animation: fadeInUp 0.8s ease forwards;
+    transition: all 0.5s ease;
+    transform-origin: center;
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+  }
+  
+  .resume-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 60%);
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .resume-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 60px var(--resume-card-shadow),
+                0 0 40px var(--resume-glow);
+    border-color: var(--resume-button-bg);
+  }
+  
+  .resume-header {
+    text-align: center;
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .resume-name {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--resume-accent);
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  
+  .resume-contact {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+    text-align: left;
+  }
+  
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    color: var(--resume-controls-text);
+    text-align: left;
+  }
+  
+  .contact-item i {
+    color: var(--resume-accent);
+  }
+  
+  .resume-section {
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 2;
+    text-align: left;
+  }
+  
+  .section-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--resume-accent);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--resume-accent);
+    position: relative;
+    text-align: left;
+  }
+  
+  .section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 50px;
+    height: 2px;
+    background: var(--resume-accent);
+  }
+  
+  .experience-item, .education-item, .project-item, .certification-item, .achievement-item {
+    background: var(--resume-section-bg);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    text-align: left;
+  }
+  
+  .experience-item:hover, .education-item:hover, .project-item:hover, .certification-item:hover, .achievement-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  }
+  
+  .item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+    text-align: left;
+  }
+  
+  .item-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--resume-text-color);
+    text-align: left;
+  }
+  
+  .item-company, .item-school, .item-issuer {
+    font-size: 18px;
+    color: var(--resume-accent);
+    font-weight: 500;
+    text-align: left;
+  }
+  
+  .item-date {
+    font-size: 16px;
+    color: var(--resume-controls-text);
+    white-space: nowrap;
+    text-align: right;
+  }
+  
+  .item-description {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--resume-text-color);
+    margin-top: 10px;
+    text-align: left;
+  }
+  
+  .item-description ul {
+    padding-left: 20px;
+    margin-top: 10px;
+    text-align: left;
+  }
+  
+  .item-description li {
+    margin-bottom: 5px;
+    text-align: left;
+  }
+  
+  .skills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 20px;
+    text-align: left;
+  }
+  
+  .skill-category {
+    flex: 1;
+    min-width: 250px;
+    text-align: left;
+  }
+  
+  .skill-category-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--resume-accent);
+    margin-bottom: 10px;
+    text-align: left;
+  }
+  
+  .skill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    text-align: left;
+  }
+  
+  .skill-tag {
+    background: var(--resume-button-bg);
+    color: var(--resume-button-color);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-align: left;
+  }
+  
+  .skill-tag:hover {
+    background: var(--resume-button-hover-bg);
+    transform: translateY(-2px);
+  }
+  
+  .hobbies-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 20px;
+    justify-content: flex-start;
+    text-align: left;
+  }
+  
+  .hobby-item {
+    background: var(--resume-section-bg);
+    border-radius: 15px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    width: calc(50% - 15px);
+    box-sizing: border-box;
+    text-align: left;
+  }
+  
+  .hobby-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  }
+  
+  .hobby-icon {
+    font-size: 24px;
+    color: var(--resume-accent);
+  }
+  
+  .hobby-name {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--resume-text-color);
+    text-align: left;
+  }
+  
+  .download-button {
+    display: inline-block;
+    margin: 30px auto;
+    background: var(--resume-button-bg);
+    color: var(--resume-button-color);
+    padding: 18px 36px;
+    border-radius: 15px;
+    text-decoration: none;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    font-size: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .download-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+  }
+  
+  .download-button:hover::before {
+    left: 100%;
+  }
+  
+  .download-button:hover {
+    background: var(--resume-button-hover-bg);
+    transform: translateY(-6px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  }
+  
+  .download-container {
+    text-align: center;
+    margin-top: 40px;
+  }
+  
+  /* Animations */
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 1200px) {
+    .container {
+      max-width: 90%;
+    }
+    
+    h1 {
+      font-size: 36px;
+    }
+  }
+  
+  @media (max-width: 992px) {
+    .container {
+      max-width: 90%;
+    }
+    
+    h1 {
+      font-size: 32px;
+    }
+    
+    .resume-card {
+      padding: 30px;
+    }
+    
+    .resume-name {
+      font-size: 32px;
+    }
+    
+    .section-title {
+      font-size: 22px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .container {
+      padding: 0 20px;
+      max-width: 100%;
+    }
+    
+    .resume-card {
+      padding: 25px;
+      margin-bottom: 30px;
+    }
+    
+    .resume-contact {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 15px;
+    }
+    
+    .item-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .item-date {
+      align-self: flex-start;
+      text-align: left;
+      margin-top: 5px;
+    }
+    
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+    
+    .resume-name {
+      font-size: 28px;
+    }
+    
+    .section-title {
+      font-size: 20px;
+    }
+    
+    .hobby-item {
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .container {
+      padding: 0 15px;
+    }
+    
+    .resume-card {
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+    
+    h1 {
+      font-size: 24px;
+      margin-bottom: 15px;
+    }
+    
+    .resume-name {
+      font-size: 24px;
+    }
+    
+    .section-title {
+      font-size: 18px;
+    }
+    
+    .item-title {
+      font-size: 18px;
+    }
+    
+    .item-company, .item-school, .item-issuer {
+      font-size: 16px;
+    }
+    
+    .item-date {
+      font-size: 14px;
+    }
+    
+    .item-description {
+      font-size: 15px;
+    }
+    
+    .download-button {
+      padding: 15px 30px;
+      font-size: 16px;
+    }
+    
+    .skill-category {
+      min-width: 100%;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .container {
+      padding: 0 10px;
+    }
+    
+    .resume-card {
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    
+    h1 {
+      font-size: 22px;
+    }
+    
+    .resume-name {
+      font-size: 22px;
+    }
+    
+    .section-title {
+      font-size: 16px;
+    }
+    
+    .item-title {
+      font-size: 16px;
+    }
+    
+    .item-company, .item-school, .item-issuer {
+      font-size: 15px;
+    }
+    
+    .item-date {
+      font-size: 13px;
+    }
+    
+    .item-description {
+      font-size: 14px;
+    }
+    
+    .download-button {
+      padding: 12px 24px;
+      font-size: 14px;
+    }
+    
+    .hobby-item {
+      flex-direction: column;
+      text-align: center;
+      align-items: center;
+    }
+  }
+</style>
+<div class="container" >
+  <h1 id="resume-title">My Resume</h1>
+  
+  <div class="resume-card">
+    <div class="resume-header">
+      <div class="resume-name">VENKATESWARA RAO BHIMASINGI</div>
+      
+      <div class="resume-contact">
+        <div class="contact-item">
+          <i>📧</i>
+          <span>srinu19773@gmail.com</span>
+        </div>
+        <div class="contact-item">
+          <i>📱</i>
+          <span>+91-9491019773</span>
+        </div>
+        <div class="contact-item">
+          <i>🌐</i>
+          <span>https://venkateswararaobhimasingi.vercel.app</span>
+        </div>
+        <div class="contact-item">
+          <i>📍</i>
+          <span>ELURU</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="resume-section">
+      <div class="section-title">Professional Summary</div>
+      <div class="item-description">
+        Adaptable and motivated professional with strong problem-solving skills and a passion for learning new technologies. Committed to delivering quality results, collaborating effectively in diverse teams, and continuously improving skills to meet evolving industry needs. Equipped with excellent communication and organizational abilities, making me well-prepared to contribute as a Software Developer.
+      </div>
+    </div>
+    
+    <div class="resume-section">
+      <div class="section-title">Skills</div>
+      
+      <div class="skills-container">
+        <div class="skill-category">
+          <div class="skill-category-title">Experienced</div>
+          <div class="skill-list">
+            <span class="skill-tag">Django</span>
+            <span class="skill-tag">Computer Vision</span>
+          </div>
+        </div>
+        
+        <div class="skill-category">
+          <div class="skill-category-title">Skillful</div>
+          <div class="skill-list">
+            <span class="skill-tag">Python</span>
+            <span class="skill-tag">Kotlin</span>
+            <span class="skill-tag">Java</span>
+            <span class="skill-tag">C++</span>
+          </div>
+        </div>
+        
+        <div class="skill-category">
+          <div class="skill-category-title">Beginner</div>
+          <div class="skill-list">
+            <span class="skill-tag">ABAP</span>
+          </div>
+        </div>
+        
+        <div class="skill-category">
+          <div class="skill-category-title">Soft Skills</div>
+          <div class="skill-list">
+            <span class="skill-tag">Teamwork</span>
+            <span class="skill-tag">Collaboration</span>
+            <span class="skill-tag">Leadership</span>
+            <span class="skill-tag">Problem-Solving</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="resume-section">
+      <div class="section-title">Education</div>
+      
+      <div class="education-item">
+        <div class="item-header">
+          <div>
+            <div class="item-title">BACHELOR OF TECHNOLOGY IN COMPUTER SCIENCE AND ENGINEERING</div>
+            <div class="item-school">Sri Vasavi Engineering College, Tadepalligudem, Andhra Pradesh</div>
+          </div>
+          <div class="item-date">Oct 2022 – Present</div>
+        </div>
+        <div class="item-description">
+          Percentage: 78.78
+        </div>
+      </div>
+      
+      <div class="education-item">
+        <div class="item-header">
+          <div>
+            <div class="item-title">INTERMEDIATE IN MPC</div>
+            <div class="item-school">MJPAPBCW Jr. College, Mopidevi, Andhra Pradesh</div>
+          </div>
+          <div class="item-date">Aug 2020 – Apr 2022</div>
+        </div>
+        <div class="item-description">
+          Percentage: 87.9
+        </div>
+      </div>
+      
+      <div class="education-item">
+        <div class="item-header">
+          <div>
+            <div class="item-title">SECONDARY SCHOOL CERTIFICATE</div>
+            <div class="item-school">Good News English Medium High School, Eluru, Andhra Pradesh</div>
+          </div>
+          <div class="item-date">-</div>
+        </div>
+        <div class="item-description">
+          Percentage: 90
+        </div>
+      </div>
+    </div>
+    
+    <div class="resume-section">
+      <div class="section-title">Work Experience</div>
+      
+     
+      
+      <div class="experience-item">
+        <div class="item-header">
+          <div>
+            <div class="item-title">INTERN</div>
+            <div class="item-company">Edunet Foundation, Virtual</div>
+          </div>
+          <div class="item-date">Jan 2024 – May 2025</div>
+        </div>
+        <div class="item-description">
+          <ul>
+            <li>Participated in 1 to 6 week virtual internships focused on learning and skill-building in industry-relevant technologies.</li>
+            <li>Completed expert-led training, tasks, and projects, gaining hands-on exposure to various tech fields.</li>
+            <li>Earned completion certificates, demonstrating a commitment to continuous learning and professional development.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <div class="resume-section">
+      <div class="section-title">Projects</div>
+      
+      <div class="project-item">
+        <div class="item-header">
+          <div>
+            <div class="item-title">FORGOTYOUREMAIL</div>
+            <div class="item-company">Android App & Django API</div>
+          </div>
+          <div class="item-date">Jun 2025 – Present</div>
+        </div>
+        <div class="item-description">
+          <ul>
+            <li>Built an innovative Android app with Kotlin and a secure Django REST API backend to help users manage and regain access to their Gmail inboxes.</li>
+            <li>Implemented features such as smart inbox classification, email analysis, auto-replies, and calendar/task integration using Gmail and Google APIs.</li>
+            <li>Solved email overload by delivering intelligent notifications, actionable insights, and streamlined inbox management.</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="project-item">
+        <div class="item-header">
+          <div>
+            <div class="item-title">HEALHAVEN</div>
+            <div class="item-company">Django Platform</div>
+          </div>
+          <div class="item-date">Jan 2025 – Mar 2025</div>
+        </div>
+        <div class="item-description">
+          <ul>
+            <li>Developed an innovative Django-based digital platform bridging education and healthcare to provide timely support for students.</li>
+            <li>Designed to provide timely assistance in a safe, student-friendly environment.</li>
+            <li>Leveraged simplicity, automation, and accessibility to promote a culture of well-being.</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="project-item">
+        <div class="item-header">
+          <div>
+            <div class="item-title">REAL-TIME FACE, MOTION, AND EDGE DETECTION</div>
+            <div class="item-company">Python Desktop Application</div>
+          </div>
+          <div class="item-date">Jun 2023 – Aug 2023</div>
+        </div>
+        <div class="item-description">
+          <ul>
+            <li>Created a Python-based desktop application using Tkinter and OpenCV for real-time visual processing.</li>
+            <li>Implemented features including face detection, motion detection, and edge detection using webcam input.</li>
+            <li>This project demonstrates basic computer vision techniques with an interactive GUI.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <div class="resume-section">
+      <div class="section-title">Certifications</div>
+      
+      <div class="certification-item">
+        <div class="item-header">
+          <div>
+            <div class="item-title">MICROSOFT CERTIFIED: AZURE FUNDAMENTALS CERTIFICATION (AZ900)</div>
+            <div class="item-issuer">Microsoft</div>
+          </div>
+          <div class="item-date">Jun 2025</div>
+        </div>
+      </div>
+      
+      <div class="certification-item">
+        <div class="item-header">
+          <div>
+            <div class="item-title">MONGODB CERTIFIED ASSOCIATE DEVELOPER</div>
+            <div class="item-issuer">MongoDB</div>
+          </div>
+          <div class="item-date">May 2025</div>
+        </div>
+      </div>
+      
+      <div class="certification-item">
+        <div class="item-header">
+          <div>
+            <div class="item-title">ZERO TRUST CYBER ASSOCIATE (ZTCA) FROM ZSCALER</div>
+            <div class="item-issuer">ZScaler</div>
+          </div>
+          <div class="item-date">May 2025</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="resume-section">
+      <div class="section-title">Achievements</div>
+      
+      <div class="achievement-item">
+        <div class="item-header">
+          <div>
+            <div class="item-title">DJANGO WEB DEVELOPMENT BOOTCAMP</div>
+          </div>
+          <div class="item-date">Jun 2024</div>
+        </div>
+        <div class="item-description">
+          Gave my best to share the knowledge I had, explaining everything I learned with sincerity. Though the outcome didn't meet expectations, I choose not to give up. I take it as a lesson, not a failure – and a chance to grow, improve, and come back stronger.
+        </div>
+      </div>
+      
+      <div class="achievement-item">
+        <div class="item-header">
+          <div>
+            <div class="item-title">TOP 6 FINALIST - COLLEGE LEVEL HACKATHON</div>
+          </div>
+          <div class="item-date">Nov 2023</div>
+        </div>
+        <div class="item-description">
+          <ul>
+            <li>Our team developed HealthConnect, a Django-based health platform aimed at improving student wellness and medical support.</li>
+            <li>The project featured user authentication, health issue reporting, and a blog system.</li>
+            <li>It was recognized among the top 6 entries for its practical impact and clean execution.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <div class="resume-section">
+      <div class="section-title">Hobbies</div>
+      
+      <div class="hobbies-container">
+        <div class="hobby-item">
+          <div class="hobby-icon">🎁</div>
+          <div class="hobby-name">Collecting Swags</div>
+        </div>
+        <div class="hobby-item">
+          <div class="hobby-icon">🤼</div>
+          <div class="hobby-name">Playing Kabaddi</div>
+        </div>
+        <div class="hobby-item">
+          <div class="hobby-icon">🧩</div>
+          <div class="hobby-name">Solving Sudoku</div>
+        </div>
+        <div class="hobby-item">
+          <div class="hobby-icon">🌐</div>
+          <div class="hobby-name">Exploring the Internet</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="download-container">
+      <a href="{{ resume_pdf_url }}" class="download-button" download id="download-resume">
+        📄 Download Resume PDF
+      </a>
+    </div>
+  </div>
+</div>
+<script>
+  // Typing effect for the heading
+  function typeText(element, text, delay = 100) {
+    let i = 0;
+    element.textContent = "";
+    element.style.opacity = 1;
+    const interval = setInterval(() => {
+      element.textContent += text[i];
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+      }
+    }, delay);
+  }
+  
+  // Function to set theme based on time of day
+  function setThemeByTime() {
+    const hour = new Date().getHours();
+    const body = document.body;
+    
+    // Remove existing theme classes
+    body.classList.remove('light-mode', 'dark-mode');
+    
+    // Set theme based on time: 6 AM to 6 PM is light mode
+    if (hour >= 6 && hour < 18) {
+      body.classList.add('light-mode');
+    } else {
+      body.classList.add('dark-mode');
+    }
+  }
+  
+  // Initialize when DOM is loaded
+  window.addEventListener('DOMContentLoaded', () => {
+    // Set theme based on current time
+    setThemeByTime();
+    
+    // Update theme every minute to handle time changes while page is open
+    setInterval(setThemeByTime, 60000);
+    
+    const titleEl = document.getElementById('resume-title');
+    
+    // Start typing animation for the title
+    setTimeout(() => {
+      typeText(titleEl, "My Resume", 100);
+    }, 500);
+    
+    // Set up download button
+    document.getElementById('download-resume').addEventListener('click', function(e) {
+      e.preventDefault();
+      const url = "{{ resume_pdf_url }}";
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'VENKATESWARA_RAO_BHIMASINGI_RESUME.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  });
+</script>
+{% endblock %}

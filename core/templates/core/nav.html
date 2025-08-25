@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Nav Component</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    /* Navbar Container */
+    .nav {
+      display: flex;
+      justify-content: center;
+      padding: 15px;
+      transition: all 0.5s ease-in-out;
+    }
+
+    /* Navbar Links */
+    .nav a {
+      position: relative;
+      padding: 10px 20px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.4s;
+    }
+
+    /* Active/hover animation underline */
+    .nav a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -5px;
+      width: 0;
+      height: 3px;
+      background: currentColor;
+      transition: width 0.4s ease;
+    }
+
+    .nav a:hover::after,
+    .nav a.active::after {
+      width: 100%;
+    }
+
+    /* Day Theme */
+    .day-theme .nav {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(6px);
+    }
+
+    .day-theme .nav a {
+      color: #222;
+    }
+
+    .day-theme .nav a:hover {
+      color: #0077ff;
+    }
+
+    /* Night Theme */
+    .night-theme .nav {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(6px);
+    }
+
+    .night-theme .nav a {
+      color: #0ff;
+      text-shadow: 0 0 10px #0ff;
+    }
+
+    .night-theme .nav a:hover {
+      color: #fff;
+      text-shadow: 0 0 20px #0ff;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <div class="nav">
+    <a href="#" class="active">Home</a>
+    <a href="#">About</a>
+    <a href="#">Services</a>
+    <a href="#">Contact</a>
+  </div>
+
+  <script>
+    function setTheme() {
+      let hour = new Date().getHours();
+      let body = document.body;
+
+      if (hour >= 6 && hour < 18) {
+        body.classList.add("day-theme");
+        body.classList.remove("night-theme");
+      } else {
+        body.classList.add("night-theme");
+        body.classList.remove("day-theme");
+      }
+    }
+
+    setTheme();
+  </script>
+</body>
+</html>
