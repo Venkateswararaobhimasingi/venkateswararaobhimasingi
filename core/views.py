@@ -20,16 +20,17 @@ from .models import Repository
 from django.http import JsonResponse
 import requests
 from django.conf import settings
-from .models import Repository
+from .models import Repository, GitHubToken
 
 def sync_github_repos(request):
-    token = settings.GITHUB_TOKEN
+    token1 = GitHubToken.objects.filter(name='github').first()
+    token=token1.token
     url = "https://api.github.com/user/repos?per_page=100&sort=created&direction=desc"
     headers = {"Authorization": f"token {token}"}
 
     response = requests.get(url, headers=headers)
     repos = response.json()
-    print(repos)
+    #print(repos)
 
     saved_count = 0
     owner = "Venkateswararaobhimasingi"

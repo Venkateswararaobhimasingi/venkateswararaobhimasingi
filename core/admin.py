@@ -10,6 +10,7 @@ class FeedActivityAdmin(admin.ModelAdmin):
     readonly_fields = ("meta", "created_at")
 
 from django.contrib import admin
-from .models import Repository   # import the model
+from .models import Repository,GitHubToken   # import the model
 
 admin.site.register(Repository)
+admin.site.register(GitHubToken)

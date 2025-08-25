@@ -91,8 +91,9 @@ def fetch_linkedin_posts(rapidapi_key: str | None = None, page: int = 1):
 import os
 import requests
 from django.conf import settings
-
-GITHUB_TOKEN = settings.GITHUB_TOKEN # store securely in env var
+from .models import GitHubToken
+token1 = GitHubToken.objects.filter(name='github').first()
+GITHUB_TOKEN = token1.token# store securely in env var
 GITHUB_USERNAME ="Venkateswararaobhimasingi" 
 
 def fetch_github_events(username: str | None = None):
