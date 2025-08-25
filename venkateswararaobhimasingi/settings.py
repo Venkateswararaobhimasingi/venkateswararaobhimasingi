@@ -117,7 +117,8 @@ GITHUB_TOKEN='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'
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Aisa/Kolkata'
+TIME_ZONE = "Asia/Kolkata"
+
 
 USE_I18N = True
 
