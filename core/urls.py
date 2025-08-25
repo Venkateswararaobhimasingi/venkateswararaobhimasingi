@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     path("github/", views.github_projects, name="github"),
-    path('/',views.home,name='home'),
+    path("",views.home,name='home'),
     path("linkedin/", views.linkedin_posts, name="linkedin_posts"),
     path("feed/", views.feed_view, name="feed"),
     path("sync_feed/", views.api_sync_feed, name="api_sync_feed"),
