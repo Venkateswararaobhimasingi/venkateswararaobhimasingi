@@ -528,54 +528,87 @@
   }
   
   @media (max-width: 480px) {
-    .container {
-      padding: 0 10px;
-    }
-    
-    .resume-card {
-      padding: 15px;
-      margin-bottom: 20px;
-    }
-    
-    h1 {
-      font-size: 22px;
-    }
-    
-    .resume-name {
-      font-size: 22px;
-    }
-    
-    .section-title {
-      font-size: 16px;
-    }
-    
-    .item-title {
-      font-size: 16px;
-    }
-    
-    .item-company, .item-school, .item-issuer {
-      font-size: 15px;
-    }
-    
-    .item-date {
-      font-size: 13px;
-    }
-    
-    .item-description {
-      font-size: 14px;
-    }
-    
-    .download-button {
-      padding: 12px 24px;
-      font-size: 14px;
-    }
-    
-    .hobby-item {
-      flex-direction: column;
-      text-align: center;
-      align-items: center;
-    }
+  
+  .container {
+    width: 100%;
+    padding: 0 8px;
+    box-sizing: border-box;
   }
+
+  .resume-card {
+    width: 80%;
+    padding: 12px;
+    margin-bottom: 16px;
+    border-radius: 10px;
+    box-sizing: border-box;
+    
+  }
+
+  h1 {
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  .resume-name {
+    font-size: 20px;
+    text-align: center;
+    word-break: break-word; /* avoid cutting */
+  }
+
+  .section-title {
+    font-size: 15px;
+    margin-top: 12px;
+    margin-bottom: 6px;
+  }
+
+  .item-title {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .item-company, .item-school, .item-issuer {
+    font-size: 14px;
+  }
+
+  .item-date {
+    font-size: 12px;
+    color: #ccc;
+  }
+
+  .item-description {
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: justify;
+  }
+
+  .download-button {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+    font-size: 14px;
+    margin-top: 16px;
+  }
+
+  .hobby-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  /* Ensure icons + text align well */
+  .contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 14px;
+    word-wrap: break-word;
+  }
+}
+
 </style>
 <div class="container" >
   <h1 id="resume-title">My Resume</h1>
@@ -687,7 +720,7 @@
             <div class="item-title">SECONDARY SCHOOL CERTIFICATE</div>
             <div class="item-school">Good News English Medium High School, Eluru, Andhra Pradesh</div>
           </div>
-          <div class="item-date">-</div>
+          <div class="item-date">Jun 2019 – May 2020</div>
         </div>
         <div class="item-description">
           Percentage: 90
