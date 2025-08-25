@@ -8,7 +8,7 @@
       <div class="cert-card">
         <h3>{{ cert.name }}</h3>
         {% if cert.date %}
-          <p class="date">{{ cert.date|date:"d M Y" }}</p>
+          
         {% endif %}
         <div class="pdf-viewer">
           <canvas id="pdf-canvas-{{ forloop.counter }}"></canvas>
