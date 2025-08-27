@@ -17,7 +17,7 @@
 
 ## 🛠️ Skills
 - **Experienced:** Django, Computer Vision  
-- **Proficient:** Python, Kotlin, Java, C++  
+- **Skillful:** Python, Kotlin, Java, C++  
 - **Beginner:** ABAP  
 - **Soft Skills:** Teamwork, Leadership, Problem-Solving  
 
