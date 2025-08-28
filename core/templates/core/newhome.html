@@ -542,11 +542,11 @@
       octx.rotate(angle);
       
       // Draw illuminated part
-      const lit = Math.max(0, Math.min(1, (phase+1)/2));
-      const litW = r*lit*2;
+        const lit = Math.cos(phaseFrac * Math.PI * 2);
+        const litW = r * 2 * Math.abs(lit);
       
       octx.beginPath();
-      octx.ellipse(0, 0, litW/2, r, 0, 0, Math.PI*2);
+      octx.ellipse(0, 0, litW, r, 0, 0, Math.PI*2);
       octx.fillStyle = 'rgb(230,235,255)';
       octx.fill();
       
